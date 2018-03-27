@@ -121,8 +121,11 @@ token_dict = {
 
 
 class Token():
-    def __repr__(self):
-        return "({}, {})".format(self.type, self.value)
+    def __str__(self):
+        return '({}, {})'.format(self.type, self.value)
+
+    def __eq__(self, rhs):
+        return self.type == rhs.type and self.value == rhs.value
 
     def __init__(self, type, value):
         self._type = type
