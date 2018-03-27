@@ -32,4 +32,7 @@ def run():
     args = parser.parse_args()
 
     for file in args.files:
-        print(assembler.assemble(file))
+        # https://www.python.org/dev/peps/pep-3140/
+        results = assembler.assemble(file)
+        for result in results:
+            print(result)
