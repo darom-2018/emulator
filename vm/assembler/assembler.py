@@ -19,4 +19,4 @@ from . import scanner
 
 
 def assemble(file):
-    tokens = scanner.scan(file)
+    return scanner.scan(file)
