@@ -140,10 +140,7 @@ def scan(file):
 
     for line in file:
         for word in line.strip().split():
-            type = token_dict.get(word.upper())
-
-            if (type is None):
-                type = TokenType.LITERAL
+            type = token_dict.get(word.upper(), TokenType.LITERAL)
 
             tokens.append(Token(type, word))
 
