@@ -26,6 +26,7 @@ class TokenType(Enum):
     PROGRAM = auto()
     DATA = auto()
     CODE = auto()
+    END = auto()
 
     LITERAL = auto()
 
@@ -75,6 +76,7 @@ token_dict = {
     '$PROGRAM': TokenType.PROGRAM,
     '$DATA': TokenType.DATA,
     '$CODE': TokenType.CODE,
+    '$END': TokenType.END,
     'NOP': TokenType.NOP,
     'HALT': TokenType.HALT,
     'DUP': TokenType.DUP,
