@@ -120,11 +120,11 @@ token_dict = {
 
 class Token():
     def __repr__(self):
-        return "({}, {})".format(self.type, self.data)
+        return "({}, {})".format(self.type, self.value)
 
-    def __init__(self, type, data):
+    def __init__(self, type, value):
         self._type = type
-        self._data = data
+        self._value = value
 
     @property
     def type(self):
