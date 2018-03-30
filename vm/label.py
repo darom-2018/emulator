@@ -15,8 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import scanner
+
+from . import cpu
 
 
-def assemble(file):
-    return scanner.scan(file)
+class Label(cpu.Instruction):
+    def __init__(self, label, instruction):
+        cpu.Instruction.__init__(self,
+                                 instruction.code,
+                                 instruction.mnemonic,
+                                 instruction.nargs,
+                                 args=instruction.args,
+                                 length=instruction.length)
+
+        self._label = label

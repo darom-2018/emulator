@@ -1,0 +1,158 @@
+# © 2018 Ernestas Kulik
+
+# This file is part of Darom.
+
+# Darom is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Darom is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Darom.  If not, see <http://www.gnu.org/licenses/>.
+
+from . import cpu
+from . import label
+from . import program
+
+from ply import lex
+from ply.lex import TOKEN
+
+from ply import yacc
+
+
+class Assembler():
+    def __init__(self, cpu):
+        self._cpu = cpu
+        self._lexer = lex.lex(module=self, debug=True)
+        self._parser = yacc.yacc(module=self, debug=True)
+        self._column = 1
+        self._labels = []
+
+    # Lexer
+    global _sections
+    _sections = {
+        'PROGRAM': 'PROGRAM',
+        'DATA': 'DATA',
+        'CODE': 'CODE',
+        'END': 'END'
+    }
+    tokens = list(_sections.values()) + [
+        'BYTE_STRING',
+        'COMMENT',
+        'ID',
+        'INSTRUCTION',
+        'INTEGER',
+        'LABEL',
+        'SECTION'
+    ]
+
+    t_ignore = ' \t'
+
+    def t_COMMENT(self, t):
+        r';.*'
+        pass
+
+    def t_INTEGER(self, t):
+        r'[\dA-Fa-f]+h|0[Xx][\dA-Fa-f]+|0\d+|\d+'
+        if t.value.startswith('0') and not t.value.lower().startswith('0x'):
+            t.value = int(t.value, 8)
+        elif t.value.endswith('h'):
+            t.value = int(t.value[:-1], 16)
+        else:
+            t.value = int(t.value, 0)
+        t.value = t.value.to_bytes((t.value.bit_length() + 7) // 8,
+                                   byteorder='little')
+        return t
+
+    def t_BYTE_STRING(self, t):
+        r'(?i)"[\da-z]+"'
+        t.value = t.value[1:-1]
+        return t
+
+    def t_ID(self, t):
+        r'(?i)[\da-z]+\:|[\da-z]+'
+        if t.value.endswith(':'):
+            t.type = 'LABEL'
+            t.value = t.value[:-1]
+            if t.value in self._labels:
+                raise Exception(
+                    'Error: {}:{}: Redefinition of label “{}”'.format(
+                        t.lineno, self._column, t.value)
+                )
+            self._labels.append(t.value)
+        else:
+            instruction = self._cpu.instruction_set.find_instruction(t.value)
+            if instruction is not None:
+                t.type = 'INSTRUCTION'
+                t.value = instruction
+        return t
+
+    def t_SECTION(self, t):
+        r'\$[A-Z]+'
+        t.type = _sections.get(t.value[1:])
+        return t
+
+    def t_newline(self, t):
+        r'\n+'
+        t.lexer.lineno += len(t.value)
+        self._column = 1
+
+    def t_error(self, t):
+        print('Error: {}:{}: Illegal character: {}'.format(t.lineno,
+                                                           self._column,
+                                                           t.value[0]))
+
+    # Parser
+    def p_program(self, p):
+        '''
+        program : PROGRAM BYTE_STRING DATA data CODE code END
+        '''
+        p[0] = program.Program(p[2], p[4], p[6])
+
+    def p_data(self, p):
+        '''
+        data :
+             | BYTE_STRING data
+             | INTEGER data
+        '''
+        if len(p) == 1:
+            p[0] = []
+        else:
+            p[0] = [p[1]] + p[2]
+
+    def p_code(self, p):
+        '''
+        code :
+             | code INSTRUCTION ID
+             | code INSTRUCTION INTEGER
+             | code INSTRUCTION
+             | code LABEL INSTRUCTION ID
+             | code LABEL INSTRUCTION INTEGER
+             | code LABEL INSTRUCTION
+        '''
+
+        if len(p) == 1:
+            p[0] = []
+        elif isinstance(p[2], cpu.Instruction):
+            if len(p) == 4:
+                p[2].args = [p[3]]
+            p[0] = p[1] + [p[2]]
+        else:
+            if len(p) == 5:
+                p[3].args = [p[4]]
+            p[0] = p[1] + [label.Label(p[2], p[3])]
+
+    def p_error(self, p):
+        raise TypeError(
+            'Syntax error: token type {} not expected: {}'.format(p.type,
+                                                                  p.value)
+        )
+
+    def assemble(self, file):
+        program = yacc.parse(file.read(), lexer=self._lexer)
+        print(program)

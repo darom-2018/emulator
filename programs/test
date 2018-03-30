@@ -1,6 +1,18 @@
 $PROGRAM
-TEST
+    "TEST"
 $DATA
+    "0123" ; Will be parsed as "0123"
+    0123   ; Will be parsed as 83
+    0x123  ; Will be parsed as 291
+    123h   ; Will be parsed as 291
+    123    ; Will be parsed as 123
+    "TEST"
 $CODE
-HALT
-$END
+label:
+    PUSH label
+label:
+    ADD
+    PUSH 10h
+    JMP
+    HALT
+    $END

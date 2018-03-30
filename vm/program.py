@@ -16,22 +16,29 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from . import assembler
-from . import cpu
+class Program():
+    def __init__(self, name, data, code):
+        self._name = name
+        self._data = data
+        self._code = code
 
-import argparse
-import sys
+    def __str__(self):
+        string = '''Program “{}”:
+    Data:
+        {}
+    Code:
+        {}'''.format(self.name, self.data, self.code)
 
+        return string
 
-def run():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('files',
-                        nargs='+',
-                        type=open,
-                        metavar='FILE')
+    @property
+    def name(self):
+        return self._name
 
-    args = parser.parse_args()
+    @property
+    def data(self):
+        return self._data
 
-    for file in args.files:
-        hlp = cpu.HLP()
-        hlp.run(assembler.Assembler(hlp).assemble(file))
+    @property
+    def code(self):
+        return self._code
