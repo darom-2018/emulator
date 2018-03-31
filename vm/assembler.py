@@ -24,6 +24,8 @@ from ply.lex import TOKEN
 
 from ply import yacc
 
+import copy
+
 
 class Assembler():
     def __init__(self, cpu):
@@ -31,7 +33,7 @@ class Assembler():
         self._lexer = lex.lex(module=self, debug=True)
         self._parser = yacc.yacc(module=self, debug=True)
         self._column = 1
-        self._labels = []
+        self._labels = {}
 
     # Lexer
     global _sections
@@ -48,10 +50,16 @@ class Assembler():
         'INSTRUCTION',
         'INTEGER',
         'LABEL',
-        'SECTION'
+        'SECTION',
+        'LABEL_REFERENCE',
     ]
 
     t_ignore = ' \t'
+
+    def t_BYTE_STRING(self, t):
+        r'(?i)"[\da-z]+"'
+        t.value = t.value[1:-1]
+        return t
 
     def t_COMMENT(self, t):
         r';.*'
@@ -69,13 +77,10 @@ class Assembler():
                                    byteorder='little')
         return t
 
-    def t_BYTE_STRING(self, t):
-        r'(?i)"[\da-z]+"'
-        t.value = t.value[1:-1]
-        return t
-
     def t_ID(self, t):
-        r'(?i)[\da-z]+\:|[\da-z]+'
+        r'(?i)@[\da-z]+|[\da-z]+\:|[\da-z]+'
+        if t.value.startswith('@'):
+            t.type = 'LABEL_REFERENCE'
         if t.value.endswith(':'):
             t.type = 'LABEL'
             t.value = t.value[:-1]
@@ -84,12 +89,12 @@ class Assembler():
                     'Error: {}:{}: Redefinition of label “{}”'.format(
                         t.lineno, self._column, t.value)
                 )
-            self._labels.append(t.value)
+            self._labels[t.value] = 0
         else:
             instruction = self._cpu.instruction_set.find_instruction(t.value)
             if instruction is not None:
                 t.type = 'INSTRUCTION'
-                t.value = instruction
+                t.value = copy.deepcopy(instruction)
         return t
 
     def t_SECTION(self, t):
@@ -125,27 +130,39 @@ class Assembler():
         else:
             p[0] = [p[1]] + p[2]
 
+    def p_argument(self, p):
+        '''
+        argument : INTEGER
+                 | LABEL_REFERENCE
+        '''
+        p[0] = p[1]
+
+    def p_instruction(self, p):
+        '''
+        instruction : INSTRUCTION
+                    | INSTRUCTION argument
+        '''
+        if len(p) == 3:
+            p[1].arg = p[2]
+        p[0] = p[1]
+
+    def p_labeled_instruction(self, p):
+        '''
+        labeled_instruction : LABEL instruction
+        '''
+        p[0] = label.Label(p[1], p[2])
+
     def p_code(self, p):
         '''
         code :
-             | code INSTRUCTION ID
-             | code INSTRUCTION INTEGER
-             | code INSTRUCTION
-             | code LABEL INSTRUCTION ID
-             | code LABEL INSTRUCTION INTEGER
-             | code LABEL INSTRUCTION
+             | code instruction
+             | code labeled_instruction
         '''
 
         if len(p) == 1:
             p[0] = []
-        elif isinstance(p[2], cpu.Instruction):
-            if len(p) == 4:
-                p[2].args = [p[3]]
-            p[0] = p[1] + [p[2]]
         else:
-            if len(p) == 5:
-                p[3].args = [p[4]]
-            p[0] = p[1] + [label.Label(p[2], p[3])]
+            p[0] = p[1] + [p[2]]
 
     def p_error(self, p):
         raise TypeError(
@@ -155,4 +172,36 @@ class Assembler():
 
     def assemble(self, file):
         program = yacc.parse(file.read(), lexer=self._lexer)
-        print(program)
+
+        offset = 0
+
+        for instruction in program.code:
+            if isinstance(instruction, label.Label):
+                self._labels[instruction.label] = offset
+            offset += self._cpu.instruction_set.instruction_size
+            if instruction.takes_args:
+                offset += self._cpu.word_size
+
+        offset = 0
+
+        for instruction in program.code:
+            offset += self._cpu.instruction_set.instruction_size
+            if instruction.takes_args:
+                offset += self._cpu.word_size
+                if isinstance(instruction.arg, bytes):
+                    continue
+                if instruction.arg.startswith('@'):
+                    label_reference = instruction.arg[1:]
+                    if label_reference not in self._labels:
+                        raise Exception('Label “{}” not defined'.format(
+                            label_reference)
+                        )
+                    offset_to_label = self._labels.get(label_reference) - offset
+                    # Two’s-complement the offset
+                    if offset_to_label < 0:
+                        offset_to_label += 1
+                    instruction.arg = offset_to_label.to_bytes(
+                        self._cpu.word_size,
+                        byteorder='little',
+                        signed=True
+                    )

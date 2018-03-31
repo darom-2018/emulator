@@ -17,22 +17,20 @@
 
 
 class Instruction():
-    def __init__(self, code, mnemonic, nargs, args=None, length=-1):
+    def __init__(self, code, mnemonic, takes_args=False, arg=None, length=-1):
         self._code = code
         self._mnemonic = mnemonic
-        self._nargs = nargs
-        if args is not None and len(args) > nargs:
+        self._takes_args = takes_args
+        if not self.takes_args and arg is not None:
             raise Exception(
-                'Instruction {} takes {} arguments, but {} were provided'.format(
-                    mnemonic, nargs, len(args)
-                )
+                'Instruction {} does not take arguments'.format(self.mnemonic)
             )
-        self._args = args
+        self._arg = arg
         self._length = length
 
     def __repr__(self):
         return '({}, {}, {}, {})'.format(
-            self._code, self._mnemonic, self._nargs, self._args
+            self._code, self._mnemonic, self._takes_args, self._arg
         )
 
     @property
@@ -44,24 +42,24 @@ class Instruction():
         return self._mnemonic
 
     @property
-    def nargs(self):
-        return self._nargs
+    def takes_args(self):
+        return self._takes_args
+
+    @property
+    def arg(self):
+        return self._arg
+
+    @arg.setter
+    def arg(self, arg):
+        if not self.takes_args:
+            raise Exception(
+                'Instruction {} does not take arguments'.format(self.mnemonic)
+            )
+        self._arg = arg
 
     @property
     def length(self):
         return self._length
-
-    @property
-    def supports_args(self):
-        return self._nargs > 0
-
-    @property
-    def args(self):
-        return self._args
-
-    @args.setter
-    def args(self, args):
-        self._args = args
 
 
 class InstructionSet():
@@ -82,12 +80,17 @@ class InstructionSet():
 
 
 class CPU():
-    def __init__(self, instruction_set):
+    def __init__(self, instruction_set, word_size=2):
         self._instruction_set = instruction_set
+        self._word_size = word_size
 
     @property
     def instruction_set(self):
         return self._instruction_set
+
+    @property
+    def word_size(self):
+        return self._word_size
 
     def run(self, program):
         pass
@@ -96,52 +99,52 @@ class CPU():
 class HLP(CPU):
     def __init__(self):
         instruction_set = InstructionSet(1, {
-            'NOP': Instruction(b'0x00', 'NOP', 0),
-            'HALT': Instruction(b'0x01', 'HALT', 0),
+            'NOP': Instruction(b'0x00', 'NOP'),
+            'HALT': Instruction(b'0x01', 'HALT'),
 
-            'DUP': Instruction(b'0x10', 'DUP', 0),
-            'POP': Instruction(b'0x11', 'POP', 0),
-            'POPM': Instruction(b'0x12', 'POPM', 0),
-            'PUSH': Instruction(b'0x13', 'PUSH', 1),
-            'PUSHM': Instruction(b'0x14', 'PUSHM', 0),
-            'PUSHF': Instruction(b'0x15', 'PUSHF', 0),
-            'PUSHDS': Instruction(b'0x16', 'PUSHDS', 0),
+            'DUP': Instruction(b'0x10', 'DUP'),
+            'POP': Instruction(b'0x11', 'POP'),
+            'POPM': Instruction(b'0x12', 'POPM'),
+            'PUSH': Instruction(b'0x13', 'PUSH', takes_args=True),
+            'PUSHM': Instruction(b'0x14', 'PUSHM'),
+            'PUSHF': Instruction(b'0x15', 'PUSHF'),
+            'PUSHDS': Instruction(b'0x16', 'PUSHDS'),
 
-            'ADD': Instruction(b'0x20', 'ADD', 0),
-            'CMP': Instruction(b'0x21', 'CMP', 0),
-            'DEC': Instruction(b'0x22', 'DEC', 0),
-            'DIV': Instruction(b'0x23', 'DIV', 0),
-            'INC': Instruction(b'0x24', 'INC', 0),
-            'MUL': Instruction(b'0x25', 'MUL', 0),
-            'SUB': Instruction(b'0x26', 'SUB', 0),
+            'ADD': Instruction(b'0x20', 'ADD'),
+            'CMP': Instruction(b'0x21', 'CMP'),
+            'DEC': Instruction(b'0x22', 'DEC'),
+            'DIV': Instruction(b'0x23', 'DIV'),
+            'INC': Instruction(b'0x24', 'INC'),
+            'MUL': Instruction(b'0x25', 'MUL'),
+            'SUB': Instruction(b'0x26', 'SUB'),
 
-            'AND': Instruction(b'0x30', 'AND', 0),
-            'NOT': Instruction(b'0x31', 'NOT', 0),
-            'OR': Instruction(b'0x32', 'OR', 0),
-            'XOR': Instruction(b'0x33', 'XOR', 0),
+            'AND': Instruction(b'0x30', 'AND'),
+            'NOT': Instruction(b'0x31', 'NOT'),
+            'OR': Instruction(b'0x32', 'OR'),
+            'XOR': Instruction(b'0x33', 'XOR'),
 
-            'JMP': Instruction(b'0x40', 'JMP', 0),
-            'JC': Instruction(b'0x41', 'JC', 0),
-            'JE': Instruction(b'0x42', 'JE', 0),
-            'JG': Instruction(b'0x43', 'JG', 0),
-            'JGE': Instruction(b'0x44', 'JGE', 0),
-            'JL': Instruction(b'0x45', 'JL', 0),
-            'JLE': Instruction(b'0x46', 'JLE', 0),
-            'JNC': Instruction(b'0x47', 'JNC', 0),
-            'JNE': Instruction(b'0x48', 'JNE', 0),
-            'JNP': Instruction(b'0x49', 'JNP', 0),
-            'JP': Instruction(b'0x4A', 'JP', 0),
-            'LOOP': Instruction(b'0x4B', 'LOOP', 0),
+            'JMP': Instruction(b'0x40', 'JMP'),
+            'JC': Instruction(b'0x41', 'JC'),
+            'JE': Instruction(b'0x42', 'JE'),
+            'JG': Instruction(b'0x43', 'JG'),
+            'JGE': Instruction(b'0x44', 'JGE'),
+            'JL': Instruction(b'0x45', 'JL'),
+            'JLE': Instruction(b'0x46', 'JLE'),
+            'JNC': Instruction(b'0x47', 'JNC'),
+            'JNE': Instruction(b'0x48', 'JNE'),
+            'JNP': Instruction(b'0x49', 'JNP'),
+            'JP': Instruction(b'0x4A', 'JP'),
+            'LOOP': Instruction(b'0x4B', 'LOOP'),
 
-            'IN': Instruction(b'0x50', 'IN', 0),
-            'INI': Instruction(b'0x51', 'INI', 0),
-            'OUT': Instruction(b'0x52', 'OUT', 0),
-            'OUTI': Instruction(b'0x53', 'OUTI', 0),
+            'IN': Instruction(b'0x50', 'IN'),
+            'INI': Instruction(b'0x51', 'INI'),
+            'OUT': Instruction(b'0x52', 'OUT'),
+            'OUTI': Instruction(b'0x53', 'OUTI'),
 
-            'SHREAD': Instruction(b'0x60', 'SHREAD', 0),
-            'SHWRITE': Instruction(b'0x61', 'SHWRITE', 0),
-            'SHLOCK': Instruction(b'0x62', 'SHLOCK', 0),
+            'SHREAD': Instruction(b'0x60', 'SHREAD'),
+            'SHWRITE': Instruction(b'0x61', 'SHWRITE'),
+            'SHLOCK': Instruction(b'0x62', 'SHLOCK'),
 
-            'LED': Instruction(b'0x70', 'LED', 0),
+            'LED': Instruction(b'0x70', 'LED'),
         })
         CPU.__init__(self, instruction_set)

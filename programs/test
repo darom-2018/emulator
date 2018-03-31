@@ -8,11 +8,49 @@ $DATA
     123    ; Will be parsed as 123
     "TEST"
 $CODE
-label:
-    PUSH label
-label:
-    ADD
-    PUSH 10h
-    JMP
+start:
+    NOP
     HALT
-    $END
+    DUP
+    POP
+    POPM
+    PUSH @start
+    PUSH @end
+    PUSH 0x10
+    PUSH 0x20
+    PUSH 0x30
+    PUSHM
+    PUSHF
+    PUSHDS
+    ADD
+    CMP
+    DEC
+    DIV
+    INC
+    MUL
+    SUB
+    AND
+    NOT
+    OR
+    XOR
+    JMP
+    JC
+    JE
+    JG
+    JGE
+    JL
+    JLE
+    JNC
+    JNE
+    JNP
+    JP
+    LOOP
+    IN
+    INI
+    OUT
+    OUTI
+    SHREAD
+    SHWRITE
+    SHLOCK
+end: LED
+$END

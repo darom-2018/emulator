@@ -24,8 +24,11 @@ class Label(cpu.Instruction):
         cpu.Instruction.__init__(self,
                                  instruction.code,
                                  instruction.mnemonic,
-                                 instruction.nargs,
-                                 args=instruction.args,
+                                 takes_args=instruction.takes_args,
+                                 arg=instruction.arg,
                                  length=instruction.length)
-
         self._label = label
+
+    @property
+    def label(self):
+        return self._label
