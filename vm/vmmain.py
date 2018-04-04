@@ -18,6 +18,7 @@
 
 from . import assembler
 from . import cpu
+from . import memory
 
 import argparse
 import sys
@@ -33,5 +34,6 @@ def run():
     args = parser.parse_args()
 
     for file in args.files:
-        hlp = cpu.HLP()
+        mem = memory.Memory()
+        hlp = cpu.HLP(mem)
         hlp.run(assembler.Assembler(hlp).assemble(file))
