@@ -20,8 +20,11 @@ class Memory:
     def __init__(self):
         self._blocks = 66
         self._words = 16
+        self._bytes_in_word = 2
+        
+        self._bytes = self._words * self._bytes_in_word
         self._memory = [
-            [None for x in range(self._words)] for y in range(self._blocks)
+            [None for x in range(self._bytes)] for y in range(self._blocks)
         ]
 
     @property
@@ -32,11 +35,15 @@ class Memory:
     def words(self):
         return self._words
 
+    @property
+    def bytes(self):
+        return self._bytes
+
     def dump(self, blocks=64):
         print("=====================================")
         for i in range(blocks):
             print(i, end=' ')
-            for j in range(self._words):
+            for j in range(self._bytes):
                 data = self._memory[i][j]
                 if isinstance(data, bytes):
                     print("{}h".format(data.hex().upper()), end=' ')
@@ -46,11 +53,11 @@ class Memory:
         print("=====================================")
 
     def write(self, address, data):
-        block = address // self.words
-        word = address % self.words
-        self._memory[block][word] = data
+        block = address // self.bytes
+        byte = address % self.bytes
+        self._memory[block][byte] = data
 
     def read(self, address):
-        block = address // self.words
-        word = address % self.words
-        return self._memory[block][word]
+        block = address // self.bytes
+        byte = address % self.bytes
+        return self._memory[block][byte]

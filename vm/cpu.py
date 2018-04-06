@@ -133,17 +133,17 @@ class CPU():
         self.load_data(program.data)
 
     def load_code(self, code):
-        offset = 0
+        address = 0
         for instr in code:
-            self.write_to_memory(offset, instr.code)
+            self.write_to_memory(address, instr.code)
             if instr.takes_args:
-                self.write_to_memory(offset + 1, instr.arg[0].to_bytes(1, 'little'))
+                self.write_to_memory(address + 1, instr.arg[0].to_bytes(1, 'little'))
                 if instr.arg.__len__() == 2:
-                    self.write_to_memory(offset + 2, instr.arg[1].to_bytes(1, 'little'))
+                    self.write_to_memory(address + 2, instr.arg[1].to_bytes(1, 'little'))
                 else:
-                    self.write_to_memory(offset + 2, (0).to_bytes(1, 'little'))
-            offset += instr.length
-        return offset
+                    self.write_to_memory(address + 2, (0).to_bytes(1, 'little'))
+            address += instr.length
+        return address
 
     def load_data(self, program_data):
         address = self.DS
