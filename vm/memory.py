@@ -41,7 +41,7 @@ class Memory:
     def dump(self, blocks=64):
         print("=====================================")
         for i in range(blocks):
-            print(i, end=' ')
+            print(i * self._bytes, end=' ')
             for j in range(self._bytes):
                 data = self._memory[i][j]
                 if isinstance(data, bytes):

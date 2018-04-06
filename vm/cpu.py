@@ -127,11 +127,14 @@ class CPU():
         self.load_program(program)
         self._memory.dump(5)
         self.execute_program()
+        self._memory.dump(5)
 
     def load_program(self, program):
         program_len = self.load_code(program.code)
-        # DS nustatom i pirma bloka, uz kodo segmento
-        self._DS = ((program_len // self._memory.bytes) + 1) * self._memory.bytes
+        # SP nustatom i pirma bloka, uz kodo segmento
+        self._SP = ((program_len // self._memory.bytes) + 1) * self._memory.bytes
+        # DS nustatom iskart uz steko (du blokai)
+        self._DS = self._SP + (2 * self._memory.bytes)
         self.load_data(program.data)
 
     def load_code(self, code):
@@ -179,6 +182,11 @@ class CPU():
         # todo: padaryti puslapiu transliacija
         absolute_address = relative_address
         self._memory.write(absolute_address, data)
+
+    def write_word_to_memory(self, relative_address, word):
+        absolute_address = relative_address
+        self._memory.write(absolute_address, bytes([word[0]]))
+        self._memory.write(absolute_address + 1, bytes([word[1]]))
 
     def read_memory(self, relative_address):
         if isinstance(relative_address, bytes):
@@ -244,4 +252,24 @@ class HLP(CPU):
 
     def execute_instruction(self, instr):
         mnemonic = instr.mnemonic
-        print(mnemonic)
+        if mnemonic == 'PUSH':
+            self.push(instr.arg)
+        elif mnemonic == 'ADD':
+            self.add()
+        elif mnemonic == 'HALT':
+            pass
+
+    def push(self, word):
+        self._SP += 2
+        self.write_word_to_memory(self._SP, word)
+
+    def pop(self):
+        lower_byte = self.read_memory(self._SP)
+        upper_byte = self.read_memory(self._SP + 1)
+        self._SP -= 2
+        return lower_byte + upper_byte
+
+    def add(self):
+        a = int.from_bytes(self.pop(), 'little', signed=True)
+        b = int.from_bytes(self.pop(), 'little', signed=True)
+        self.push((a+b).to_bytes(2, 'little', signed=True))
