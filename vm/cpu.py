@@ -1,4 +1,4 @@
-# © 2018 Ernestas Kulik
+# © 2018 Ernestas Kulik, Justinas Valatkevičius
 
 # This file is part of Darom.
 
