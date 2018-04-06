@@ -94,6 +94,7 @@ class CPU():
         self._word_size = word_size
         self._PC = 0
         self._DS = 0
+        self._SP = 0
 
     @property
     def instruction_set(self):
@@ -129,7 +130,7 @@ class CPU():
     def load_program(self, program):
         program_len = self.load_code(program.code)
         # DS nustatom i pirma bloka, uz kodo segmento
-        self._DS = ((program_len // self._memory.words) + 1) * self._memory.words
+        self._DS = ((program_len // self._memory.bytes) + 1) * self._memory.bytes
         self.load_data(program.data)
 
     def load_code(self, code):
@@ -161,6 +162,7 @@ class CPU():
         instr = None
         while not (instr == self.instruction_set.find_instruction('HALT')):
             instr = self.get_instruction()
+            self.execute_instruction(instr)
 
     def get_instruction(self):
         pc = self.PC
@@ -238,3 +240,7 @@ class HLP(CPU):
             'LED': Instruction(b'\x70', 'LED'),
         })
         CPU.__init__(self, instruction_set, memory)
+
+    def execute_instruction(self, instr):
+        mnemonic = instr.mnemonic
+        print(mnemonic)
