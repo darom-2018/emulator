@@ -252,24 +252,211 @@ class HLP(CPU):
 
     def execute_instruction(self, instr):
         mnemonic = instr.mnemonic
-        if mnemonic == 'PUSH':
-            self.push(instr.arg)
-        elif mnemonic == 'ADD':
-            self.add()
+
+        if mnemonic == 'NOP':
+            pass
         elif mnemonic == 'HALT':
             pass
+        elif mnemonic == 'DUP':
+            pass
+        elif mnemonic == 'POP':
+            self.Pop()
+        elif mnemonic == 'PUSH':
+            self.Push(instr.arg)
+        elif mnemonic == 'PUSHM':
+            pass
+        elif mnemonic == 'PUSHF':
+            pass
+        elif mnemonic == 'PUSHDS':
+            pass
+        elif mnemonic == 'ADD':
+            self.Add()
+        elif mnemonic == 'CMP':
+            pass
+        elif mnemonic == 'DEC':
+            pass
+        elif mnemonic == 'DIV':
+            pass
+        elif mnemonic == 'INC':
+            pass
+        elif mnemonic == 'MUL':
+            pass
+        elif mnemonic == 'SUB':
+            pass
+        elif mnemonic == 'AND':
+            pass
+        elif mnemonic == 'NOT':
+            pass
+        elif mnemonic == 'OR':
+            pass
+        elif mnemonic == 'XOR':
+            pass
+        elif mnemonic == 'JMP':
+            pass
+        elif mnemonic == 'JC':
+            pass
+        elif mnemonic == 'JE':
+            pass
+        elif mnemonic == 'JG':
+            pass
+        elif mnemonic == 'JGE':
+            pass
+        elif mnemonic == 'JL':
+            pass
+        elif mnemonic == 'JLE':
+            pass
+        elif mnemonic == 'JNC':
+            pass
+        elif mnemonic == 'JNE':
+            pass
+        elif mnemonic == 'JNP':
+            pass
+        elif mnemonic == 'JP':
+            pass
+        elif mnemonic == 'LOOP':
+            pass
+        elif mnemonic == 'IN':
+            pass
+        elif mnemonic == 'INI':
+            pass
+        elif mnemonic == 'OUT':
+            pass
+        elif mnemonic == 'OUTI':
+            pass
+        elif mnemonic == 'SHREAD':
+            pass
+        elif mnemonic == 'SHWRITE':
+            pass
+        elif mnemonic == 'SHLOCK':
+            pass
+        elif mnemonic == 'LED':
+            pass
 
-    def push(self, word):
-        self._SP += 2
-        self.write_word_to_memory(self._SP, word)
+    def Nop(self):
+        pass
 
-    def pop(self):
+    def Halt(self):
+        pass
+
+    def Dup(self):
+        pass
+
+    def Pop(self):
         lower_byte = self.read_memory(self._SP)
         upper_byte = self.read_memory(self._SP + 1)
         self._SP -= 2
         return lower_byte + upper_byte
 
-    def add(self):
-        a = int.from_bytes(self.pop(), 'little', signed=True)
-        b = int.from_bytes(self.pop(), 'little', signed=True)
-        self.push((a+b).to_bytes(2, 'little', signed=True))
+    def Popm(self):
+        pass
+
+    def Push(self, word):
+        self._SP += 2
+        self.write_word_to_memory(self._SP, word)
+
+    def Pushm(self):
+        pass
+
+    def Pushf(self):
+        pass
+
+    def Pushds(self):
+        pass
+
+    def Add(self):
+        a = int.from_bytes(self.Pop(), 'little', signed=True)
+        b = int.from_bytes(self.Pop(), 'little', signed=True)
+        try:
+            self.Push((a+b).to_bytes(2, 'little', signed=False))
+        except OverflowError:
+            # sutalpina per dideli rezultata i viena zodi
+            word = (a+b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push( word.to_bytes(2, 'little', signed=False) )
+            print("Overflow adding {} + {}".format(a, b))
+
+    def Cmp(self):
+        pass
+
+    def Dec(self):
+        pass
+
+    def Inc(self):
+        pass
+
+    def Mul(self):
+        pass
+
+    def Sub(self):
+        pass
+
+    def And(self):
+        pass
+
+    def Not(self):
+        pass
+
+    def Or(self):
+        pass
+
+    def Xor(self):
+        pass
+
+    def Jmp(self):
+        pass
+
+    def Jc(self):
+        pass
+
+    def Je(self):
+        pass
+
+    def Jg(self):
+        pass
+
+    def Jge(self):
+        pass
+
+    def Jl(self):
+        pass
+
+    def Jle(self):
+        pass
+
+    def Jnc(self):
+        pass
+
+    def Jne(self):
+        pass
+
+    def Jnp(self):
+        pass
+
+    def Jp(self):
+        pass
+
+    def Loop(self):
+        pass
+
+    def In(self):
+        pass
+
+    def Ini(self):
+        pass
+
+    def Out(self):
+        pass
+
+    def Outi(self):
+        pass
+
+    def Shread(self):
+        pass
+
+    def Shwrite(self):
+        pass
+
+    def Shlock(self):
+        pass
+
+    def Led(self):
+        pass
