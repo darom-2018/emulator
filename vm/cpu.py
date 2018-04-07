@@ -97,6 +97,10 @@ class CPU():
         self._DS = 0
         self._SP = 0
 
+        self._CF = 0;
+        self._ZF = 0;
+        self._PF = 0;
+
     @property
     def instruction_set(self):
         return self._instruction_set
@@ -134,7 +138,7 @@ class CPU():
         # SP nustatom i pirma bloka, uz kodo segmento
         self._SP = ((program_len // self._memory.bytes) + 1) * self._memory.bytes
         # DS nustatom iskart uz steko (du blokai)
-        self._DS = self._SP + (2 * self._memory.bytes)
+        self._DS = (program_len // self._memory.bytes) + 3
         self.load_data(program.data)
 
     def load_code(self, code):
@@ -151,7 +155,7 @@ class CPU():
         return address
 
     def load_data(self, program_data):
-        address = self.DS
+        address = self.DS * self._memory.bytes
         for data_item in program_data:
             if isinstance(data_item, str):
                 for c in data_item:
@@ -165,12 +169,19 @@ class CPU():
     def execute_program(self):
         instr = None
         while not (instr == self.instruction_set.find_instruction('HALT')):
+            print(self._PC, end='\t')
             instr = self.get_instruction()
+            print(instr.mnemonic, end='\t')
+            if instr.takes_args:
+                print(int.from_bytes(instr.arg, 'little', signed=True))
+            else:
+                print()
             self.execute_instruction(instr)
 
     def get_instruction(self):
         pc = self.PC
         instr_code = self.read_memory(pc)
+        print(instr_code, end='\t')
         instr = self._instruction_set.find_instruction_by_code(instr_code)
         if instr.takes_args:
             instr.arg = self.read_memory(pc + 1) + self.read_memory(pc + 2)
@@ -196,6 +207,32 @@ class CPU():
         # atlikti transliacija
         return self._memory.read(absolute_address)
 
+    def read_memory_word(self, relative_addres):
+        lower_byte = self.read_memory(relative_addres)
+        upper_byte = self.read_memory(relative_addres + 1)
+        return lower_byte + upper_byte
+
+    # kai bus FLAGS registras reikes pakeisti, kad dirbtu su juo
+    def set_CF(self, value):
+        self._CF = value
+
+    def get_CF(self):
+        return self._CF
+
+    def set_ZF(self, value):
+        self._ZF = value
+
+    def get_ZF(self):
+        return self._ZF
+
+    def set_PF(self, value):
+        self._PF = value
+
+    def get_PF(self):
+        return self._PF
+
+    def dump_flags(self):
+        print("CF: {}\nZF: {}\nPF: {}".format(self.get_CF(), self.get_ZF(), self.get_PF()))
 
 class HLP(CPU):
     def __init__(self, memory):
@@ -254,51 +291,51 @@ class HLP(CPU):
         mnemonic = instr.mnemonic
 
         if mnemonic == 'NOP':
-            pass
+            self.Nop()
         elif mnemonic == 'HALT':
             pass
         elif mnemonic == 'DUP':
-            pass
+            self.Dup()
         elif mnemonic == 'POP':
             self.Pop()
         elif mnemonic == 'PUSH':
             self.Push(instr.arg)
         elif mnemonic == 'PUSHM':
-            pass
+            self.Pushm()
         elif mnemonic == 'PUSHF':
             pass
         elif mnemonic == 'PUSHDS':
-            pass
+            self.Pushds()
         elif mnemonic == 'ADD':
             self.Add()
         elif mnemonic == 'CMP':
             pass
         elif mnemonic == 'DEC':
-            pass
+            self.Dec()
         elif mnemonic == 'DIV':
-            pass
+            self.Div()
         elif mnemonic == 'INC':
-            pass
+            self.Inc()
         elif mnemonic == 'MUL':
-            pass
+            self.Mul()
         elif mnemonic == 'SUB':
-            pass
+            self.Sub()
         elif mnemonic == 'AND':
-            pass
+            self.And()
         elif mnemonic == 'NOT':
-            pass
+            self.Not()
         elif mnemonic == 'OR':
-            pass
+            self.Or()
         elif mnemonic == 'XOR':
-            pass
+            self.Xor()
         elif mnemonic == 'JMP':
-            pass
+            self.Jmp()
         elif mnemonic == 'JC':
-            pass
+            self.Jc()
         elif mnemonic == 'JE':
             pass
         elif mnemonic == 'JG':
-            pass
+            self.Jg()
         elif mnemonic == 'JGE':
             pass
         elif mnemonic == 'JL':
@@ -314,7 +351,7 @@ class HLP(CPU):
         elif mnemonic == 'JP':
             pass
         elif mnemonic == 'LOOP':
-            pass
+            self.Loop()
         elif mnemonic == 'IN':
             pass
         elif mnemonic == 'INI':
@@ -333,19 +370,20 @@ class HLP(CPU):
             pass
 
     def Nop(self):
-        pass
+        self._memory.dump(5)
+        return
 
     def Halt(self):
         pass
 
     def Dup(self):
-        pass
+        word = self.read_memory_word(self._SP)
+        self.Push(word)
 
     def Pop(self):
-        lower_byte = self.read_memory(self._SP)
-        upper_byte = self.read_memory(self._SP + 1)
+        word = self.read_memory_word(self._SP)
         self._SP -= 2
-        return lower_byte + upper_byte
+        return word
 
     def Popm(self):
         pass
@@ -355,87 +393,152 @@ class HLP(CPU):
         self.write_word_to_memory(self._SP, word)
 
     def Pushm(self):
-        pass
+        word_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        block_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        data = self.read_memory_word(
+            block_num * self._memory.block_size + word_num * self._memory.word_size
+        )
+        self.Push(data)
 
     def Pushf(self):
         pass
 
     def Pushds(self):
-        pass
+        self.Push(self._DS.to_bytes(2, 'little', signed=False))
 
     def Add(self):
-        a = int.from_bytes(self.Pop(), 'little', signed=True)
-        b = int.from_bytes(self.Pop(), 'little', signed=True)
+        a = int.from_bytes(self.Pop(), 'little', signed=False)
+        b = int.from_bytes(self.Pop(), 'little', signed=False)
         try:
-            self.Push((a+b).to_bytes(2, 'little', signed=False))
+            result = a + b
+            self.Push(result.to_bytes(2, 'little', signed=False))
+            self.check_flags(result)
         except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
             # sutalpina per dideli rezultata i viena zodi
-            word = (a+b) & int.from_bytes(b'\xff' * self._word_size, 'little')
-            self.Push( word.to_bytes(2, 'little', signed=False) )
-            print("Overflow adding {} + {}".format(a, b))
+            result = (a+b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push( result.to_bytes(2, 'little', signed=False) )
+            self.check_PF(result)
 
     def Cmp(self):
-        pass
+        self.Sub()
 
     def Dec(self):
-        pass
+        stack_top = int.from_bytes(self.Pop(), 'little', signed=False)
+        stack_top -= 1
+        self.Push(stack_top.to_bytes(2, 'little', signed=False))
+
+    def Div(self):
+        a, b = self.get_two_ints_from_stack(signed=False)
+        self.Push(self.to_word(a // b))
 
     def Inc(self):
-        pass
+        self.Push(b'\x01\x00')
+        self.Add()
 
     def Mul(self):
-        pass
+        a, b = self.get_two_ints_from_stack(signed=False)
+        self.Push(self.to_word(a * b, signed=False))
+        #todo: susitvarkyti su perpildymu
 
     def Sub(self):
-        pass
+        a = int.from_bytes(self.Pop(), 'little', signed=False)
+        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        try:
+            result = a-b
+            self.Push(result.to_bytes(2, 'little', signed=False))
+            self.check_flags(result)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            result = (a-b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push( result.to_bytes(2, 'little', signed=False) )
+            self.check_PF(result)
 
     def And(self):
-        pass
+        a = int.from_bytes(self.Pop(), 'little', signed=False)
+        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        result = a & b
+        self.Push( result.to_bytes(2, 'little', signed=False) )
+        self.check_flags(result)
 
     def Not(self):
-        pass
+        self.Push(b'\xff' * self._memory.word_size)
+        self.Xor()
 
     def Or(self):
-        pass
+        a = int.from_bytes(self.Pop(), 'little', signed=False)
+        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        result = a | b
+        self.Push( result.to_bytes(2, 'little', signed=False) )
+        self.check_flags(result)
 
     def Xor(self):
-        pass
+        a = int.from_bytes(self.Pop(), 'little', signed=False)
+        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        result = a ^ b
+        self.Push( result.to_bytes(2, 'little', signed=False) )
+        self.check_flags(result)
 
     def Jmp(self):
-        pass
+        offset = self.get_int_from_stack(signed=True)
+        # hackas, kad veiktu
+        if(offset < 0):
+            self._PC += offset - 2
+        else:
+            self._PC += offset - 1
 
     def Jc(self):
-        pass
+        if self.get_CF() == 1:
+            self.Jmp()
 
     def Je(self):
-        pass
+        if self.get_ZF() == 0:
+            self.Jmp()
 
     def Jg(self):
-        pass
+        if (self.get_ZF() == 0) and (self.get_CF() == 1):
+            self.Jmp()
 
     def Jge(self):
-        pass
+        if ((self.get_ZF() == 0) and (self.get_CF() == 1)) or (self.get_ZF == 1):
+            self.Jmp()
 
     def Jl(self):
-        pass
+        if (self.get_ZF() == 0) and (self.get_CF() == 0):
+            self.Jmp()
 
     def Jle(self):
-        pass
+        if ((self.get_ZF() == 0) and (self.get_CF() == 0)) or (self.get_ZF == 1):
+            self.Jmp()
 
     def Jnc(self):
-        pass
+        if self.get_CF() == 0:
+            self.Jmp()
 
     def Jne(self):
-        pass
+        if self.get_ZF() == 0:
+            self.Jmp()
 
     def Jnp(self):
-        pass
+        if self.get_PF() == 0:
+            self.Jmp()
 
     def Jp(self):
-        pass
+        if self.get_PF() == 1:
+            self.Jmp()
 
     def Loop(self):
-        pass
+        counter = int.from_bytes(self.read_memory_word(self._SP - 2), 'little', signed=False)
+        if counter > 0:
+            jmp_location = self.Pop()
+            self.Dec()  # sumazinam ciklo counteri
+            self.Push(jmp_location)
+            self.Jmp()
+        else:
+            self.Pop()
+            self.Pop()
 
     def In(self):
         pass
@@ -460,3 +563,30 @@ class HLP(CPU):
 
     def Led(self):
         pass
+
+    def check_flags(self, value):
+        self.check_PF(value)
+        self.check_ZF(value)
+
+    def check_PF(self, number):
+        if (number % 2) == 0:
+            self.set_PF(1)
+        else:
+            self.set_PF(0)
+
+    def check_ZF(self, value):
+        if value == 0:
+            self.set_ZF(1)
+        else:
+            self.set_ZF(0)
+
+    def get_two_ints_from_stack(self, signed=False):
+        a = int.from_bytes(self.Pop(), 'little', signed=signed)
+        b = int.from_bytes(self.Pop(), 'little', signed=signed)
+        return (a, b)
+
+    def get_int_from_stack(self, signed=False):
+        return int.from_bytes(self.Pop(), 'little', signed=signed)
+
+    def to_word(self, int, signed=False):
+        return int.to_bytes(2, 'little', signed=signed)
