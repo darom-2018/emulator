@@ -27,12 +27,16 @@ from ply import yacc
 import copy
 
 
+class AssemblerError(Exception):
+    def __init__(self, file_name, line, column, message):
+        super().__init__('{}:{}:{}: {}'.format(file_name, line, column, message))
+
+
 class Assembler():
     def __init__(self, cpu):
         self._cpu = cpu
         self._lexer = lex.lex(module=self, debug=True)
         self._parser = yacc.yacc(module=self, debug=True)
-        self._column = 1
         self._labels = {}
 
     # Lexer
@@ -56,9 +60,18 @@ class Assembler():
 
     t_ignore = ' \t'
 
+    def _calculate_column(self, t):
+        return t.lexpos - self._lexpos
+
     def t_BYTE_STRING(self, t):
-        r'(?i)"[\da-z]+"'
-        t.value = t.value[1:-1]
+        r'"([^"]*)"'
+        try:
+            t.value = t.value[1:-1].encode('ascii')
+        except UnicodeEncodeError as e:
+            raise AssemblerError(
+                # Adding 1 to the column index since we slice the string.
+                self._file_name, t.lineno, self._calculate_column(t) + 1, str(e)
+            )
         return t
 
     def t_COMMENT(self, t):
@@ -73,8 +86,12 @@ class Assembler():
             t.value = int(t.value[:-1], 16)
         else:
             t.value = int(t.value, 0)
-        t.value = t.value.to_bytes((t.value.bit_length() + 7) // 8,
-                                   byteorder='little')
+        try:
+            t.value = t.value.to_bytes(self._cpu.word_size, byteorder='little')
+        except OverflowError as e:
+            raise AssemblerError(
+                self._file_name, t.lineno, self._calculate_column(t), str(e)
+            )
         return t
 
     def t_ID(self, t):
@@ -85,9 +102,9 @@ class Assembler():
             t.type = 'LABEL'
             t.value = t.value[:-1]
             if t.value in self._labels:
-                raise Exception(
-                    'Error: {}:{}: Redefinition of label “{}”'.format(
-                        t.lineno, self._column, t.value)
+                raise AssemblerError(
+                    self._file_name, t.lineno, self._calculate_column(t),
+                    'Redefinition of label “{}”'.format(t.value)
                 )
             self._labels[t.value] = 0
         else:
@@ -105,11 +122,11 @@ class Assembler():
     def t_newline(self, t):
         r'\n+'
         t.lexer.lineno += len(t.value)
-        self._column = 1
+        self._lexpos = t.lexpos
 
     def t_error(self, t):
         print('Error: {}:{}: Illegal character: {}'.format(t.lineno,
-                                                           self._column,
+                                                           self._calculate_column(t),
                                                            t.value[0]))
 
     # Parser
@@ -166,11 +183,13 @@ class Assembler():
 
     def p_error(self, p):
         raise TypeError(
-            'Syntax error: token type {} not expected: {}'.format(p.type,
-                                                                  p.value)
+            'Syntax error: token type {} not expected: {}'.format(
+                p.type, p.value
+            )
         )
 
     def assemble(self, file):
+        self._file_name = file.name
         program = yacc.parse(file.read(), lexer=self._lexer)
 
         offset = 0
@@ -193,8 +212,8 @@ class Assembler():
                 if instruction.arg.startswith('@'):
                     label_reference = instruction.arg[1:]
                     if label_reference not in self._labels:
-                        raise Exception('Label “{}” not defined'.format(
-                            label_reference)
+                        raise Exception(
+                            'Label “{}” not defined'.format(label_reference)
                         )
                     offset_to_label = self._labels.get(label_reference) - offset
                     # Two’s-complement the offset
@@ -205,7 +224,6 @@ class Assembler():
                         byteorder='little',
                         signed=True
                     )
-
         self.calc_lengths(program)
         return program
 
