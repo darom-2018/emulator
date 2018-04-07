@@ -87,6 +87,7 @@ class InstructionSet():
             if (instr.code == code):
                 return self.find_instruction(instr.mnemonic)
 
+
 class CPU():
     def __init__(self, instruction_set, memory, word_size=2):
         self._instruction_set = instruction_set
