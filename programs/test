@@ -6,7 +6,7 @@ $DATA
     0x123  ; Will be parsed as 291
     123h   ; Will be parsed as 291
     123    ; Will be parsed as 123
-    "TEST"
+    "TEST!@#"
 $CODE
 start:
     NOP
