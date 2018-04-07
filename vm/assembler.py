@@ -224,4 +224,11 @@ class Assembler():
                         byteorder='little',
                         signed=True
                     )
+        self.calc_lengths(program)
         return program
+
+    def calc_lengths(self, program):
+        instr_size = self._cpu.instruction_set.instruction_size
+        word_size = self._cpu.word_size
+        for instr in program.code:
+            instr.length = instr_size + word_size if instr.takes_args else instr_size
