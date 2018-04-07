@@ -21,7 +21,6 @@ class Memory:
         self._blocks = 66
         self._words = 16
         self._bytes_in_word = 2
-        
         self._bytes = self._words * self._bytes_in_word
         self._memory = [
             [None for x in range(self._bytes)] for y in range(self._blocks)
