@@ -183,8 +183,9 @@ class Assembler():
 
     def p_error(self, p):
         raise TypeError(
-            'Syntax error: token type {} not expected: {}'.format(p.type,
-                                                                  p.value)
+            'Syntax error: token type {} not expected: {}'.format(
+                p.type, p.value
+            )
         )
 
     def assemble(self, file):
@@ -211,8 +212,8 @@ class Assembler():
                 if instruction.arg.startswith('@'):
                     label_reference = instruction.arg[1:]
                     if label_reference not in self._labels:
-                        raise Exception('Label “{}” not defined'.format(
-                            label_reference)
+                        raise Exception(
+                            'Label “{}” not defined'.format(label_reference)
                         )
                     offset_to_label = self._labels.get(label_reference) - offset
                     # Two’s-complement the offset
