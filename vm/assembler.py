@@ -224,3 +224,4 @@ class Assembler():
                         byteorder='little',
                         signed=True
                     )
+        return program
