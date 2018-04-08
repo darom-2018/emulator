@@ -15,25 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from . import assembler
-from . import cpu
-from . import memory
-
-import argparse
-import sys
-
-
-def run():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('files',
-                        nargs='+',
-                        type=open,
-                        metavar='FILE')
-
-    args = parser.parse_args()
-
-    for file in args.files:
-        mem = memory.Memory()
-        hlp = cpu.HLP(mem)
-        hlp.run(assembler.Assembler(hlp).assemble(file))
+WORD_SIZE = 2
+WORD_MAX = (2 ** (8 * WORD_SIZE)) - 1

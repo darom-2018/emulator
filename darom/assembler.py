@@ -15,14 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import cpu
-from . import label
-from . import program
+from . import constants
+from . import instructions
+
+from .instruction import Instruction, Label
+from .program import Program
 
 from ply import lex
-from ply.lex import TOKEN
-
 from ply import yacc
+from ply.lex import TOKEN
 
 import copy
 
@@ -87,7 +88,7 @@ class Assembler():
         else:
             t.value = int(t.value, 0)
         try:
-            t.value = t.value.to_bytes(self._cpu.word_size, byteorder='little')
+            t.value = t.value.to_bytes(constants.WORD_SIZE, byteorder='little')
         except OverflowError as e:
             raise AssemblerError(
                 self._file_name, t.lineno, self._calculate_column(t), str(e)
@@ -98,7 +99,7 @@ class Assembler():
         r'(?i)@[\da-z]+|[\da-z]+\:|[\da-z]+'
         if t.value.startswith('@'):
             t.type = 'LABEL_REFERENCE'
-        if t.value.endswith(':'):
+        elif t.value.endswith(':'):
             t.type = 'LABEL'
             t.value = t.value[:-1]
             if t.value in self._labels:
@@ -108,10 +109,7 @@ class Assembler():
                 )
             self._labels[t.value] = 0
         else:
-            instruction = self._cpu.instruction_set.find_instruction(t.value)
-            if instruction is not None:
-                t.type = 'INSTRUCTION'
-                t.value = copy.deepcopy(instruction)
+            t.type = 'INSTRUCTION'
         return t
 
     def t_SECTION(self, t):
@@ -134,7 +132,7 @@ class Assembler():
         '''
         program : PROGRAM BYTE_STRING DATA data CODE code END
         '''
-        p[0] = program.Program(p[2], p[4], p[6])
+        p[0] = Program(p[2], p[4], p[6])
 
     def p_data(self, p):
         '''
@@ -159,15 +157,17 @@ class Assembler():
         instruction : INSTRUCTION
                     | INSTRUCTION argument
         '''
+        arg = None
         if len(p) == 3:
-            p[1].arg = p[2]
-        p[0] = p[1]
+            arg = p[2]
+        p[0] = getattr(instructions, p[1].upper())()
+        p[0].arg = arg
 
     def p_labeled_instruction(self, p):
         '''
         labeled_instruction : LABEL instruction
         '''
-        p[0] = label.Label(p[1], p[2])
+        p[0] = Label(p[1], p[2])
 
     def p_code(self, p):
         '''
@@ -194,41 +194,26 @@ class Assembler():
 
         offset = 0
 
-        for instruction in program.code:
-            if isinstance(instruction, label.Label):
-                self._labels[instruction.label] = offset
-            offset += self._cpu.instruction_set.instruction_size
-            if instruction.takes_args:
-                offset += self._cpu.word_size
+        for instr in program.code:
+            if isinstance(instr, Label):
+                self._labels[instr.label] = offset
+            offset += instr.length
 
         offset = 0
 
-        for instruction in program.code:
-            offset += self._cpu.instruction_set.instruction_size
-            if instruction.takes_args:
-                offset += self._cpu.word_size
-                if isinstance(instruction.arg, bytes):
-                    continue
-                if instruction.arg.startswith('@'):
-                    label_reference = instruction.arg[1:]
+        for instr in program.code:
+            offset += instr.length
+            if instr.takes_arg and isinstance(instr.arg, str):
+                if instr.arg.startswith('@'):
+                    label_reference = instr.arg[1:]
                     if label_reference not in self._labels:
                         raise Exception(
                             'Label “{}” not defined'.format(label_reference)
                         )
                     offset_to_label = self._labels.get(label_reference) - offset
-                    # Two’s-complement the offset
-                    if offset_to_label < 0:
-                        offset_to_label += 1
-                    instruction.arg = offset_to_label.to_bytes(
-                        self._cpu.word_size,
+                    instr.arg = offset_to_label.to_bytes(
+                        constants.WORD_SIZE,
                         byteorder='little',
                         signed=True
                     )
-        self.calc_lengths(program)
         return program
-
-    def calc_lengths(self, program):
-        instr_size = self._cpu.instruction_set.instruction_size
-        word_size = self._cpu.word_size
-        for instr in program.code:
-            instr.length = instr_size + word_size if instr.takes_args else instr_size

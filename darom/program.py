@@ -42,3 +42,27 @@ class Program():
     @property
     def code(self):
         return self._code
+
+    def size(self):
+        data_size = 0
+        for datum in self.data:
+            data_size += len(datum)
+
+        code_size = 0
+        for instruction in self.code:
+            code_size += instruction.length
+
+        return data_size, code_size
+
+    def as_bytes(self):
+        data_bytes = bytes()
+        for datum in self.data:
+            data_bytes += datum
+
+        code_bytes = bytes()
+        for instruction in self.code:
+            code_bytes += instruction.code
+            if instruction.takes_arg:
+                code_bytes += instruction.arg
+
+        return data_bytes, code_bytes

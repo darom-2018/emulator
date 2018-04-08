@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_MUL"
+$DATA
+$CODE
+    PUSH FFFFh
+    PUSH FFFFh
+    MUL         ; 1
+    POP
+    HALT
+$END

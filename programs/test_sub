@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_SUB"
+$DATA
+$CODE
+    PUSH 0
+    PUSH FFFFh
+    SUB         ; FFFFh
+    POP
+    HALT
+$END

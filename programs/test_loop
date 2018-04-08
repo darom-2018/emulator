@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_LOOP"
+$DATA
+$CODE
+    PUSH 3
+label:
+    PUSH @label
+    LOOP
+    HALT
+$END

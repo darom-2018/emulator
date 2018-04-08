@@ -10,15 +10,19 @@ $DATA
 $CODE
 start:
     NOP
-    HALT
     DUP
+    PUSH 0
     POP
+    PUSH 0
+    PUSH 0
+    PUSH 0
     POPM
     PUSH @start
     PUSH @end
     PUSH 0x10
     PUSH 0x20
     PUSH 0x30
+    PUSH 0
     PUSHM
     PUSHF
     PUSHDS
@@ -52,5 +56,7 @@ start:
     SHREAD
     SHWRITE
     SHLOCK
-end: LED
+end:
+    LED
+    HALT
 $END

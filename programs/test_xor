@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_XOR"
+$DATA
+$CODE
+    PUSH 1
+    PUSH 1
+    XOR     ; 0
+    POP
+    HALT
+$END

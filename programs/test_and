@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_AND"
+$DATA
+$CODE
+    PUSH 7
+    PUSH 8
+    AND     ; 0
+    POP
+    HALT
+$END

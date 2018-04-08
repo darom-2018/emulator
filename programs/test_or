@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_OR"
+$DATA
+$CODE
+    PUSH 7
+    PUSH 8
+    OR      ; 15
+    POP
+    HALT
+$END

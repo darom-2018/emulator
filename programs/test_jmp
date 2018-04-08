@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_JMP"
+$DATA
+$CODE
+    PUSH @label
+    JMP
+    HALT
+label:
+    HALT
+$END

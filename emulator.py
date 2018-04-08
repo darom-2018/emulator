@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from vm import vmmain
+from darom import rm
 
 import sys
 
 
 def main():
-    vmmain.run()
+    rm.run()
 
 
 if __name__ == '__main__':

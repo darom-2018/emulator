@@ -1,0 +1,12 @@
+$PROGRAM
+    "TEST_PUSHF"
+$DATA
+$CODE
+    PUSH FFFFh
+    PUSH 1
+    ADD
+    POP
+    PUSHF
+    POP
+    HALT
+$END
