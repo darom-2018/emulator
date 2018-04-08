@@ -97,9 +97,9 @@ class CPU():
         self._DS = 0
         self._SP = 0
 
-        self._CF = 0;
-        self._ZF = 0;
-        self._PF = 0;
+        self._CF = 0
+        self._ZF = 0
+        self._PF = 0
 
     @property
     def instruction_set(self):
@@ -233,6 +233,7 @@ class CPU():
 
     def dump_flags(self):
         print("CF: {}\nZF: {}\nPF: {}".format(self.get_CF(), self.get_ZF(), self.get_PF()))
+
 
 class HLP(CPU):
     def __init__(self, memory):
@@ -424,8 +425,8 @@ class HLP(CPU):
             self.set_CF(1)
             self.set_ZF(0)
             # sutalpina per dideli rezultata i viena zodi
-            result = (a+b) & int.from_bytes(b'\xff' * self._word_size, 'little')
-            self.Push( self.to_word(result) )
+            result = (a + b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push(self.to_word(result))
             self.check_PF(result)
 
     def Cmp(self):
@@ -463,27 +464,27 @@ class HLP(CPU):
             self.set_CF(1)
             self.set_ZF(0)
             # sutalpina per dideli rezultata i viena zodi
-            result = (a*b) & int.from_bytes(b'\xff' * self._word_size, 'little')
-            self.Push( self.to_word(result) )
+            result = (a * b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push(self.to_word(result))
             self.check_PF(result)
 
     def Sub(self):
         a, b = self.get_two_ints_from_stack()
         try:
-            result = a-b
+            result = a - b
             self.Push(self.to_word(result))
             self.check_flags(result)
         except OverflowError:
             self.set_CF(1)
             self.set_ZF(0)
-            result = (a-b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            result = (a - b) & int.from_bytes(b'\xff' * self._word_size, 'little')
             self.Push(self.to_word(result))
             self.check_PF(result)
 
     def And(self):
         a, b = self.get_two_ints_from_stack()
         result = a & b
-        self.Push( self.to_word(result) )
+        self.Push(self.to_word(result))
         self.check_flags(result)
 
     def Not(self):
@@ -499,7 +500,7 @@ class HLP(CPU):
     def Xor(self):
         a, b = self.get_two_ints_from_stack()
         result = a ^ b
-        self.Push( self.to_word(result) )
+        self.Push(self.to_word(result))
         self.check_flags(result)
 
     def Jmp(self):
