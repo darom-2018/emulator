@@ -305,7 +305,7 @@ class HLP(CPU):
         elif mnemonic == 'PUSHM':
             self.Pushm()
         elif mnemonic == 'PUSHF':
-            pass
+            self.Pushf()
         elif mnemonic == 'PUSHDS':
             self.Pushds()
         elif mnemonic == 'ADD':
@@ -355,21 +355,21 @@ class HLP(CPU):
         elif mnemonic == 'LOOP':
             self.Loop()
         elif mnemonic == 'IN':
-            pass
+            self.In()
         elif mnemonic == 'INI':
-            pass
+            self.Ini()
         elif mnemonic == 'OUT':
-            pass
+            self.Out()
         elif mnemonic == 'OUTI':
-            pass
+            self.Outi()
         elif mnemonic == 'SHREAD':
-            pass
+            self.Shread()
         elif mnemonic == 'SHWRITE':
-            pass
+            self.Shwrite()
         elif mnemonic == 'SHLOCK':
-            pass
+            self.Shlock()
         elif mnemonic == 'LED':
-            pass
+            self.Led()
 
     def Nop(self):
         self._memory.dump(5)
@@ -434,11 +434,20 @@ class HLP(CPU):
     def Dec(self):
         stack_top = self.get_int_from_stack()
         stack_top -= 1
-        self.Push(self.to_word(stack_top))
+        try:
+            self.Push(self.to_word(stack_top))
+            self.check_flags(stack_top)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            self.Push(self.to_word(stack_top, signed=True))
+            self.check_PF(stack_top)
 
     def Div(self):
         a, b = self.get_two_ints_from_stack(signed=False)
-        self.Push(self.to_word(a // b))
+        result = a // b
+        self.Push(self.to_word(result))
+        self.check_flags(result)
 
     def Inc(self):
         self.Push(b'\x01\x00')
@@ -446,8 +455,17 @@ class HLP(CPU):
 
     def Mul(self):
         a, b = self.get_two_ints_from_stack(signed=False)
-        self.Push(self.to_word(a * b, signed=False))
-        #todo: susitvarkyti su perpildymu
+        try:
+            result = a * b
+            self.Push(self.to_word(result))
+            self.check_flags(result)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            # sutalpina per dideli rezultata i viena zodi
+            result = (a*b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push( self.to_word(result) )
+            self.check_PF(result)
 
     def Sub(self):
         a, b = self.get_two_ints_from_stack()
