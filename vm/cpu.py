@@ -97,6 +97,10 @@ class CPU():
         self._DS = 0
         self._SP = 0
 
+        self._CF = 0
+        self._ZF = 0
+        self._PF = 0
+
     @property
     def instruction_set(self):
         return self._instruction_set
@@ -127,11 +131,14 @@ class CPU():
         self.load_program(program)
         self._memory.dump(5)
         self.execute_program()
+        self._memory.dump(5)
 
     def load_program(self, program):
         program_len = self.load_code(program.code)
-        # DS nustatom i pirma bloka, uz kodo segmento
-        self._DS = ((program_len // self._memory.bytes) + 1) * self._memory.bytes
+        # SP nustatom i pirma bloka, uz kodo segmento
+        self._SP = ((program_len // self._memory.bytes) + 1) * self._memory.bytes
+        # DS nustatom iskart uz steko (du blokai)
+        self._DS = (program_len // self._memory.bytes) + 3
         self.load_data(program.data)
 
     def load_code(self, code):
@@ -148,7 +155,7 @@ class CPU():
         return address
 
     def load_data(self, program_data):
-        address = self.DS
+        address = self.DS * self._memory.bytes
         for data_item in program_data:
             if isinstance(data_item, str):
                 for c in data_item:
@@ -162,12 +169,19 @@ class CPU():
     def execute_program(self):
         instr = None
         while not (instr == self.instruction_set.find_instruction('HALT')):
+            print(self._PC, end='\t')
             instr = self.get_instruction()
+            print(instr.mnemonic, end='\t')
+            if instr.takes_args:
+                print(int.from_bytes(instr.arg, 'little', signed=True))
+            else:
+                print()
             self.execute_instruction(instr)
 
     def get_instruction(self):
         pc = self.PC
         instr_code = self.read_memory(pc)
+        print(instr_code, end='\t')
         instr = self._instruction_set.find_instruction_by_code(instr_code)
         if instr.takes_args:
             instr.arg = self.read_memory(pc + 1) + self.read_memory(pc + 2)
@@ -180,6 +194,11 @@ class CPU():
         absolute_address = relative_address
         self._memory.write(absolute_address, data)
 
+    def write_word_to_memory(self, relative_address, word):
+        absolute_address = relative_address
+        self._memory.write(absolute_address, bytes([word[0]]))
+        self._memory.write(absolute_address + 1, bytes([word[1]]))
+
     def read_memory(self, relative_address):
         if isinstance(relative_address, bytes):
             absolute_address = int.from_bytes(relative_address, 'little')
@@ -187,6 +206,33 @@ class CPU():
             absolute_address = relative_address
         # atlikti transliacija
         return self._memory.read(absolute_address)
+
+    def read_memory_word(self, relative_addres):
+        lower_byte = self.read_memory(relative_addres)
+        upper_byte = self.read_memory(relative_addres + 1)
+        return lower_byte + upper_byte
+
+    # kai bus FLAGS registras reikes pakeisti, kad dirbtu su juo
+    def set_CF(self, value):
+        self._CF = value
+
+    def get_CF(self):
+        return self._CF
+
+    def set_ZF(self, value):
+        self._ZF = value
+
+    def get_ZF(self):
+        return self._ZF
+
+    def set_PF(self, value):
+        self._PF = value
+
+    def get_PF(self):
+        return self._PF
+
+    def dump_flags(self):
+        print("CF: {}\nZF: {}\nPF: {}".format(self.get_CF(), self.get_ZF(), self.get_PF()))
 
 
 class HLP(CPU):
@@ -244,4 +290,325 @@ class HLP(CPU):
 
     def execute_instruction(self, instr):
         mnemonic = instr.mnemonic
-        print(mnemonic)
+
+        if mnemonic == 'NOP':
+            self.Nop()
+        elif mnemonic == 'HALT':
+            self.Halt()
+        elif mnemonic == 'DUP':
+            self.Dup()
+        elif mnemonic == 'POP':
+            self.Pop()
+        elif mnemonic == 'POPM':
+            self.Popm()
+        elif mnemonic == 'PUSH':
+            self.Push(instr.arg)
+        elif mnemonic == 'PUSHM':
+            self.Pushm()
+        elif mnemonic == 'PUSHF':
+            self.Pushf()
+        elif mnemonic == 'PUSHDS':
+            self.Pushds()
+        elif mnemonic == 'ADD':
+            self.Add()
+        elif mnemonic == 'CMP':
+            self.Cmp()
+        elif mnemonic == 'DEC':
+            self.Dec()
+        elif mnemonic == 'DIV':
+            self.Div()
+        elif mnemonic == 'INC':
+            self.Inc()
+        elif mnemonic == 'MUL':
+            self.Mul()
+        elif mnemonic == 'SUB':
+            self.Sub()
+        elif mnemonic == 'AND':
+            self.And()
+        elif mnemonic == 'NOT':
+            self.Not()
+        elif mnemonic == 'OR':
+            self.Or()
+        elif mnemonic == 'XOR':
+            self.Xor()
+        elif mnemonic == 'JMP':
+            self.Jmp()
+        elif mnemonic == 'JC':
+            self.Jc()
+        elif mnemonic == 'JE':
+            self.Je()
+        elif mnemonic == 'JG':
+            self.Jg()
+        elif mnemonic == 'JGE':
+            self.Jge()
+        elif mnemonic == 'JL':
+            self.Jl()
+        elif mnemonic == 'JLE':
+            self.Jle()
+        elif mnemonic == 'JNC':
+            self.Jnc()
+        elif mnemonic == 'JNE':
+            self.Jne()
+        elif mnemonic == 'JNP':
+            self.Jnp()
+        elif mnemonic == 'JP':
+            self.Jp()
+        elif mnemonic == 'LOOP':
+            self.Loop()
+        elif mnemonic == 'IN':
+            self.In()
+        elif mnemonic == 'INI':
+            self.Ini()
+        elif mnemonic == 'OUT':
+            self.Out()
+        elif mnemonic == 'OUTI':
+            self.Outi()
+        elif mnemonic == 'SHREAD':
+            self.Shread()
+        elif mnemonic == 'SHWRITE':
+            self.Shwrite()
+        elif mnemonic == 'SHLOCK':
+            self.Shlock()
+        elif mnemonic == 'LED':
+            self.Led()
+
+    def Nop(self):
+        self._memory.dump(5)
+        return
+
+    def Halt(self):
+        pass
+
+    def Dup(self):
+        word = self.read_memory_word(self._SP)
+        self.Push(word)
+
+    def Pop(self):
+        word = self.read_memory_word(self._SP)
+        self._SP -= 2
+        return word
+
+    def Popm(self):
+        word_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        block_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        data = self.Pop()
+        self.write_word_to_memory(
+            block_num * self._memory.block_size + word_num * self._memory.word_size,
+            data
+        )
+
+    def Push(self, word):
+        self._SP += 2
+        self.write_word_to_memory(self._SP, word)
+
+    def Pushm(self):
+        word_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        block_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        data = self.read_memory_word(
+            block_num * self._memory.block_size + word_num * self._memory.word_size
+        )
+        self.Push(data)
+
+    def Pushf(self):
+        pass
+
+    def Pushds(self):
+        self.Push(self.to_word(self._DS))
+
+    def Add(self):
+        a, b = self.get_two_ints_from_stack()
+        try:
+            result = a + b
+            self.Push(self.to_word(result))
+            self.check_flags(result)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            # sutalpina per dideli rezultata i viena zodi
+            result = (a + b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push(self.to_word(result))
+            self.check_PF(result)
+
+    def Cmp(self):
+        self.Sub()
+
+    def Dec(self):
+        stack_top = self.get_int_from_stack()
+        stack_top -= 1
+        try:
+            self.Push(self.to_word(stack_top))
+            self.check_flags(stack_top)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            self.Push(self.to_word(stack_top, signed=True))
+            self.check_PF(stack_top)
+
+    def Div(self):
+        a, b = self.get_two_ints_from_stack(signed=False)
+        result = a // b
+        self.Push(self.to_word(result))
+        self.check_flags(result)
+
+    def Inc(self):
+        self.Push(b'\x01\x00')
+        self.Add()
+
+    def Mul(self):
+        a, b = self.get_two_ints_from_stack(signed=False)
+        try:
+            result = a * b
+            self.Push(self.to_word(result))
+            self.check_flags(result)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            # sutalpina per dideli rezultata i viena zodi
+            result = (a * b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push(self.to_word(result))
+            self.check_PF(result)
+
+    def Sub(self):
+        a, b = self.get_two_ints_from_stack()
+        try:
+            result = a - b
+            self.Push(self.to_word(result))
+            self.check_flags(result)
+        except OverflowError:
+            self.set_CF(1)
+            self.set_ZF(0)
+            result = (a - b) & int.from_bytes(b'\xff' * self._word_size, 'little')
+            self.Push(self.to_word(result))
+            self.check_PF(result)
+
+    def And(self):
+        a, b = self.get_two_ints_from_stack()
+        result = a & b
+        self.Push(self.to_word(result))
+        self.check_flags(result)
+
+    def Not(self):
+        self.Push(b'\xff' * self._memory.word_size)
+        self.Xor()
+
+    def Or(self):
+        a, b = self.get_two_ints_from_stack()
+        result = a | b
+        self.Push(self.to_word(result))
+        self.check_flags(result)
+
+    def Xor(self):
+        a, b = self.get_two_ints_from_stack()
+        result = a ^ b
+        self.Push(self.to_word(result))
+        self.check_flags(result)
+
+    def Jmp(self):
+        offset = self.get_int_from_stack(signed=True)
+        # hackas, kad veiktu
+        if(offset < 0):
+            self._PC += offset - 2
+        else:
+            self._PC += offset - 1
+
+    def Jc(self):
+        if self.get_CF() == 1:
+            self.Jmp()
+
+    def Je(self):
+        if self.get_ZF() == 0:
+            self.Jmp()
+
+    def Jg(self):
+        if (self.get_ZF() == 0) and (self.get_CF() == 1):
+            self.Jmp()
+
+    def Jge(self):
+        if ((self.get_ZF() == 0) and (self.get_CF() == 1)) or (self.get_ZF == 1):
+            self.Jmp()
+
+    def Jl(self):
+        if (self.get_ZF() == 0) and (self.get_CF() == 0):
+            self.Jmp()
+
+    def Jle(self):
+        if ((self.get_ZF() == 0) and (self.get_CF() == 0)) or (self.get_ZF == 1):
+            self.Jmp()
+
+    def Jnc(self):
+        if self.get_CF() == 0:
+            self.Jmp()
+
+    def Jne(self):
+        if self.get_ZF() == 0:
+            self.Jmp()
+
+    def Jnp(self):
+        if self.get_PF() == 0:
+            self.Jmp()
+
+    def Jp(self):
+        if self.get_PF() == 1:
+            self.Jmp()
+
+    def Loop(self):
+        counter = int.from_bytes(self.read_memory_word(self._SP - 2), 'little', signed=False)
+        if counter > 0:
+            jmp_location = self.Pop()
+            self.Dec()  # sumazinam ciklo counteri
+            self.Push(jmp_location)
+            self.Jmp()
+        else:
+            self.Pop()
+            self.Pop()
+
+    def In(self):
+        pass
+
+    def Ini(self):
+        pass
+
+    def Out(self):
+        pass
+
+    def Outi(self):
+        pass
+
+    def Shread(self):
+        pass
+
+    def Shwrite(self):
+        pass
+
+    def Shlock(self):
+        pass
+
+    def Led(self):
+        pass
+
+    def check_flags(self, value):
+        self.check_PF(value)
+        self.check_ZF(value)
+
+    def check_PF(self, number):
+        if (number % 2) == 0:
+            self.set_PF(1)
+        else:
+            self.set_PF(0)
+
+    def check_ZF(self, value):
+        if value == 0:
+            self.set_ZF(1)
+        else:
+            self.set_ZF(0)
+
+    def get_two_ints_from_stack(self, signed=False):
+        a = int.from_bytes(self.Pop(), 'little', signed=signed)
+        b = int.from_bytes(self.Pop(), 'little', signed=signed)
+        return (a, b)
+
+    def get_int_from_stack(self, signed=False):
+        return int.from_bytes(self.Pop(), 'little', signed=signed)
+
+    def to_word(self, int, signed=False):
+        return int.to_bytes(2, 'little', signed=signed)

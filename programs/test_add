@@ -1,0 +1,15 @@
+$PROGRAM
+    "TEST"
+$DATA
+    "0123" ; Will be parsed as "0123"
+    0123   ; Will be parsed as 83
+    0x123  ; Will be parsed as 291
+    123h   ; Will be parsed as 291
+    123    ; Will be parsed as 123
+    "TEST"
+$CODE
+    PUSH 1
+    DEC
+    DEC
+    HALT
+$END

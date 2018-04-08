@@ -38,10 +38,18 @@ class Memory:
     def bytes(self):
         return self._bytes
 
+    @property
+    def word_size(self):
+        return self._bytes_in_word
+
+    @property
+    def block_size(self):
+        return self._bytes
+
     def dump(self, blocks=64):
         print("=====================================")
         for i in range(blocks):
-            print(i, end=' ')
+            print('%d(%02xh):\t' % (i, i * self._bytes), end=' ')
             for j in range(self._bytes):
                 data = self._memory[i][j]
                 if isinstance(data, bytes):
