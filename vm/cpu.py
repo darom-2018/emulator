@@ -293,11 +293,13 @@ class HLP(CPU):
         if mnemonic == 'NOP':
             self.Nop()
         elif mnemonic == 'HALT':
-            pass
+            self.Halt()
         elif mnemonic == 'DUP':
             self.Dup()
         elif mnemonic == 'POP':
             self.Pop()
+        elif mnemonic == 'POPM':
+            self.Popm()
         elif mnemonic == 'PUSH':
             self.Push(instr.arg)
         elif mnemonic == 'PUSHM':
@@ -309,7 +311,7 @@ class HLP(CPU):
         elif mnemonic == 'ADD':
             self.Add()
         elif mnemonic == 'CMP':
-            pass
+            self.Cmp()
         elif mnemonic == 'DEC':
             self.Dec()
         elif mnemonic == 'DIV':
@@ -386,7 +388,13 @@ class HLP(CPU):
         return word
 
     def Popm(self):
-        pass
+        word_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        block_num = int.from_bytes(self.Pop(), 'little', signed=False)
+        data = self.Pop()
+        self.write_word_to_memory(
+            block_num * self._memory.block_size + word_num * self._memory.word_size,
+            data
+        )
 
     def Push(self, word):
         self._SP += 2

@@ -8,7 +8,11 @@ $DATA
     123    ; Will be parsed as 123
     "TEST"
 $CODE
-    PUSH 3
+    PUSH 14
+    PUSH 65535
+    PUSH 1
+    PUSH 1
     DEC
+    POPM
     HALT
 $END
