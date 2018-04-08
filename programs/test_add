@@ -9,12 +9,6 @@ $DATA
     "TEST"
 $CODE
     PUSH 3
-a:  PUSH 4
-    POP
-    NOP
-    PUSH @a
-    LOOP
-    INC
-    INC
+    DEC
     HALT
 $END

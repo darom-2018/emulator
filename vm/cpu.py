@@ -333,23 +333,23 @@ class HLP(CPU):
         elif mnemonic == 'JC':
             self.Jc()
         elif mnemonic == 'JE':
-            pass
+            self.Je()
         elif mnemonic == 'JG':
             self.Jg()
         elif mnemonic == 'JGE':
-            pass
+            self.Jge()
         elif mnemonic == 'JL':
-            pass
+            self.Jl()
         elif mnemonic == 'JLE':
-            pass
+            self.Jle()
         elif mnemonic == 'JNC':
-            pass
+            self.Jnc()
         elif mnemonic == 'JNE':
-            pass
+            self.Jne()
         elif mnemonic == 'JNP':
-            pass
+            self.Jnp()
         elif mnemonic == 'JP':
-            pass
+            self.Jp()
         elif mnemonic == 'LOOP':
             self.Loop()
         elif mnemonic == 'IN':
@@ -404,30 +404,29 @@ class HLP(CPU):
         pass
 
     def Pushds(self):
-        self.Push(self._DS.to_bytes(2, 'little', signed=False))
+        self.Push(self.to_word(self._DS))
 
     def Add(self):
-        a = int.from_bytes(self.Pop(), 'little', signed=False)
-        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        a, b = self.get_two_ints_from_stack()
         try:
             result = a + b
-            self.Push(result.to_bytes(2, 'little', signed=False))
+            self.Push(self.to_word(result))
             self.check_flags(result)
         except OverflowError:
             self.set_CF(1)
             self.set_ZF(0)
             # sutalpina per dideli rezultata i viena zodi
             result = (a+b) & int.from_bytes(b'\xff' * self._word_size, 'little')
-            self.Push( result.to_bytes(2, 'little', signed=False) )
+            self.Push( self.to_word(result) )
             self.check_PF(result)
 
     def Cmp(self):
         self.Sub()
 
     def Dec(self):
-        stack_top = int.from_bytes(self.Pop(), 'little', signed=False)
+        stack_top = self.get_int_from_stack()
         stack_top -= 1
-        self.Push(stack_top.to_bytes(2, 'little', signed=False))
+        self.Push(self.to_word(stack_top))
 
     def Div(self):
         a, b = self.get_two_ints_from_stack(signed=False)
@@ -443,24 +442,22 @@ class HLP(CPU):
         #todo: susitvarkyti su perpildymu
 
     def Sub(self):
-        a = int.from_bytes(self.Pop(), 'little', signed=False)
-        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        a, b = self.get_two_ints_from_stack()
         try:
             result = a-b
-            self.Push(result.to_bytes(2, 'little', signed=False))
+            self.Push(self.to_word(result))
             self.check_flags(result)
         except OverflowError:
             self.set_CF(1)
             self.set_ZF(0)
             result = (a-b) & int.from_bytes(b'\xff' * self._word_size, 'little')
-            self.Push( result.to_bytes(2, 'little', signed=False) )
+            self.Push(self.to_word(result))
             self.check_PF(result)
 
     def And(self):
-        a = int.from_bytes(self.Pop(), 'little', signed=False)
-        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        a, b = self.get_two_ints_from_stack()
         result = a & b
-        self.Push( result.to_bytes(2, 'little', signed=False) )
+        self.Push( self.to_word(result) )
         self.check_flags(result)
 
     def Not(self):
@@ -468,17 +465,15 @@ class HLP(CPU):
         self.Xor()
 
     def Or(self):
-        a = int.from_bytes(self.Pop(), 'little', signed=False)
-        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        a, b = self.get_two_ints_from_stack()
         result = a | b
-        self.Push( result.to_bytes(2, 'little', signed=False) )
+        self.Push(self.to_word(result))
         self.check_flags(result)
 
     def Xor(self):
-        a = int.from_bytes(self.Pop(), 'little', signed=False)
-        b = int.from_bytes(self.Pop(), 'little', signed=False)
+        a, b = self.get_two_ints_from_stack()
         result = a ^ b
-        self.Push( result.to_bytes(2, 'little', signed=False) )
+        self.Push( self.to_word(result) )
         self.check_flags(result)
 
     def Jmp(self):
