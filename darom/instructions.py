@@ -305,6 +305,7 @@ class LOOP(instruction.Instruction):
         vm.stack_push(counter.to_bytes(constants.WORD_SIZE, byteorder='little'))
         _jmp(self, vm, offset)
 
+
 class IN(instruction.Instruction):
     def __init__(self):
         super().__init__(b'\x50', 'IN')
