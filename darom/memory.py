@@ -38,7 +38,7 @@ class Memory:
         self._block_count = block_count
         self._block_size = block_size
 
-        self._allocation_table = { i: None for i in range(self._block_count) }
+        self._allocation_table = {i: None for i in range(self._block_count)}
         self._data = [
             [
                 b'\x00' for j in range(self._block_size * constants.WORD_SIZE)
