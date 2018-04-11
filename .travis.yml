@@ -8,5 +8,5 @@ script:
   - python -m unittest discover
   - pycodestyle
       --exclude=.git,__pycache__,parsetab.py
-      --ignore=E501
+      --ignore=E501,W503
       .

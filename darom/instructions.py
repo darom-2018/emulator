@@ -55,9 +55,9 @@ class POP(instruction.Instruction):
 
 def to_byte_address(vm, block, word):
     return (
-        vm.cpu.ds +
-        (block * vm.rm.memory.block_size * vm.rm.cpu.word_size) +
-        (word * vm.rm.cpu.word_size)
+        vm.cpu.ds
+        + (block * vm.rm.memory.block_size * vm.rm.cpu.word_size)
+        + (word * vm.rm.cpu.word_size)
     )
 
 
