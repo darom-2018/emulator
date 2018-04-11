@@ -47,6 +47,7 @@ class Instruction():
     def execute(self, vm):
         pass
 
+
 class Label(Instruction):
     def __init__(self, label, instruction):
         super().__init__(
