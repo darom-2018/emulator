@@ -41,7 +41,7 @@ class DUP(instruction.Instruction):
     def execute(self, vm):
         allocation = vm.rm.get_memory_allocation_for_vm(vm)
         head = vm.rm.memory.read_word(allocation, vm.cpu.sp)
-        vm.cpu.sp += vm.rm.cpu.word_size
+        vm.cpu.sp += constants.WORD_SIZE
         vm.rm.memory.write_word(allocation, vm.cpu.sp, head)
 
 
@@ -56,8 +56,8 @@ class POP(instruction.Instruction):
 def to_byte_address(vm, block, word):
     return (
         vm.cpu.ds
-        + (block * vm.rm.memory.block_size * vm.rm.cpu.word_size)
-        + (word * vm.rm.cpu.word_size)
+        + (block * vm.rm.memory.block_size * constants.WORD_SIZE)
+        + (word * constants.WORD_SIZE)
     )
 
 
@@ -89,7 +89,7 @@ class PUSHM(instruction.Instruction):
         word = int.from_bytes(vm.stack_pop(), byteorder='little')
         block = int.from_bytes(vm.stack_pop(), byteorder='little')
 
-        word = vm.rm.memory.read_word(vm.memory, to_bytes(vm, block, word))
+        word = vm.rm.memory.read_word(vm.memory, to_byte_address(vm, block, word))
         vm.stack_push(word)
 
 
@@ -163,7 +163,7 @@ class NOT(instruction.Instruction):
         head = int.from_bytes(vm.stack_pop(), byteorder='little')
         result = (head ^ constants.WORD_MAX) & constants.WORD_MAX
 
-        vm.stack_push(result.to_bytes(vm.rm.cpu.word_size, byteorder='little'))
+        vm.stack_push(result.to_bytes(constants.WORD_SIZE, byteorder='little'))
 
 
 class OR(instruction.BinaryOperation):
