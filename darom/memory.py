@@ -30,6 +30,10 @@ class Allocation:
         return self._block_count
 
     def translate(self, block):
+        if block not in range(self._block_count):
+            raise Exception('Accessing block {} when {} were allocated'.format(
+                block, self._block_count)
+            )
         return self._translation_table[block]
 
 
