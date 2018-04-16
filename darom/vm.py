@@ -16,7 +16,7 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import constants
-
+from . import exceptions
 
 class CPU:
     def __init__(self):
@@ -71,5 +71,8 @@ class VM:
 
     def stack_push(self, word):
         allocation = self.memory
-        head = self.rm.memory.write_word(allocation, self.cpu.sp, word)
+        try:
+            head = self.rm.memory.write_word(allocation, self.cpu.sp, word)
+        except exceptions.PagingError:
+            raise exceptions.StackOverflow(self.cpu.sp)
         self.cpu.sp += constants.WORD_SIZE
