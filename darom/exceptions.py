@@ -15,17 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class UnknownCommandCode(Exception):
     pass
+
 
 class UnknownCommandMnemonic(Exception):
     pass
 
+
 class PagingError(Exception):
-    pass
-
-class IncorrectOperand(Exception):
-    pass
-
-class StackOverflow(Exception):
     pass

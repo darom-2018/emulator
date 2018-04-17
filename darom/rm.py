@@ -46,7 +46,7 @@ class InstructionSet():
         if mnemonic in self._mnemonic_dict:
             return self._mnemonic_dict.get(mnemonic, None)
         else:
-            raise exceptions.UnknownCommandMnemonic(mnemonic);
+            raise exceptions.UnknownCommandMnemonic(mnemonic)
 
     def find_by_code(self, code):
         if code in self._code_dict:

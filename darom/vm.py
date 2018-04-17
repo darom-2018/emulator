@@ -18,6 +18,7 @@
 from . import constants
 from . import exceptions
 
+
 class CPU:
     def __init__(self):
         self.pc = 0

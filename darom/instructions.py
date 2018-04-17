@@ -22,6 +22,7 @@ from . import instruction
 import operator
 import pdb
 
+
 class NOP(instruction.Instruction):
     def __init__(self):
         super().__init__(b'\x00', 'NOP')
@@ -313,7 +314,6 @@ class IN(instruction.Instruction):
 
     def execute(self, vm):
         vm.rm.cpu.si = 2
-        #uzsetting kanalo irengini
 
 
 class INI(instruction.IOInstruction):
@@ -370,6 +370,7 @@ class SHUNLOCK(instruction.Instruction):
 
     def execute(self, vm):
         vm.rm.cpu.si = 9
+
 
 class LED(instruction.Instruction):
     def __init__(self):
