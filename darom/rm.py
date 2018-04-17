@@ -213,29 +213,29 @@ class RM:
 
     def run(self, vm_id):
         self._vm, allocation = self._vms[vm_id]
-            print('Running {}'.format(vm.program.name))
+        print('Running {}'.format(vm.program.name))
 
-            while self._vm.running:
-                # print('Memory dump:')
-                # self.memory._dump(allocation)
-                # print('Register dump:')
-                # self._dump_registers()
-                # pdb.set_trace()
-                try:
-                    instruction = self.memory.read_byte(allocation, self._vm.cpu.pc)
-                    self._vm.cpu.pc += 1
-                    # instruction = b'\xff'
-                    instruction = self._cpu.instruction_set.find_by_code(instruction)()
-                    if instruction.takes_arg:
-                        instruction.arg = self.memory.read_word(allocation, self._vm.cpu.pc)
-                        self._vm.cpu.pc += constants.WORD_SIZE
-                    instruction.execute(self._vm)
-                    if isinstance(instruction, IOInstruction):
-                        self._cpu._ti -= 3
-                    else:
-                        self._cpu._ti -= 1
-                except exceptions.UnknownCommandCode as e:
-                    self._cpu._pi = 1
-                except exceptions.PagingError as e:
-                    self._cpu._pi = 3
-                self.test()
+        while self._vm.running:
+            # print('Memory dump:')
+            # self.memory._dump(allocation)
+            # print('Register dump:')
+            # self._dump_registers()
+            # pdb.set_trace()
+            try:
+                instruction = self.memory.read_byte(allocation, self._vm.cpu.pc)
+                self._vm.cpu.pc += 1
+                # instruction = b'\xff'
+                instruction = self._cpu.instruction_set.find_by_code(instruction)()
+                if instruction.takes_arg:
+                    instruction.arg = self.memory.read_word(allocation, self._vm.cpu.pc)
+                    self._vm.cpu.pc += constants.WORD_SIZE
+                instruction.execute(self._vm)
+                if isinstance(instruction, IOInstruction):
+                    self._cpu._ti -= 3
+                else:
+                    self._cpu._ti -= 1
+            except exceptions.UnknownCommandCode as e:
+                self._cpu._pi = 1
+            except exceptions.PagingError as e:
+                self._cpu._pi = 3
+            self.test()
