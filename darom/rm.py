@@ -189,6 +189,8 @@ class RM:
             interrupt_handlers.Outi,
             interrupt_handlers.Shread,
             interrupt_handlers.Shwrite,
+            interrupt_handlers.Shlock,
+            interrupt_handlers.Shunlock,
             interrupt_handlers.Led
         ]
 

@@ -322,7 +322,7 @@ class INI(instruction.IOInstruction):
 
     def execute(self, vm):
         vm.rm.cpu.si = 3
-        #uzsetting kanalo irengini
+
 
 class OUT(instruction.IOInstruction):
     def __init__(self):
@@ -361,12 +361,19 @@ class SHLOCK(instruction.Instruction):
         super().__init__(b'\x62', 'SHLOCK')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 8
 
+
+class SHUNLOCK(instruction.Instruction):
+    def __init__(self):
+        super().__init__(b'\x62', 'SHLOCK')
+
+    def execute(self, vm):
+        vm.rm.cpu.si = 9
 
 class LED(instruction.Instruction):
     def __init__(self):
         super().__init__(b'\x70', 'LED')
 
     def execute(self, vm):
-        vm.rm.cpu.si = 8
+        vm.rm.cpu.si = 10

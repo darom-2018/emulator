@@ -20,9 +20,15 @@ def Halt(rm):
 
 def In(rm):
     print("IN")
+    block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
 
 def Ini(rm):
     print("INI")
+    block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
 
 def Out(rm):
     print("OUT")
@@ -51,8 +57,18 @@ def Shread(rm):
 def Shwrite(rm):
     print("SHWRITE")
 
+def Shlock(rm):
+    print("SHLOCK")
+
+def Shunlock(rm):
+    print("SHUNLOCK")
+
 def Led(rm):
     print("LED")
+    B = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    G = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    R = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    print(R, G, B)
 
 def Timeout(rm):
     print("TIMEOUT")
