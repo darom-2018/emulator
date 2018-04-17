@@ -70,8 +70,8 @@ class Memory:
         chosen_blocks = random.choices(available_blocks, k=block_count)
         translation_table = {}
 
-        for block, i in zip(chosen_blocks, range(block_count)):
-            translation_table[i] = block
+        for i in range(block_count):
+            translation_table[i] = chosen_blocks[i]
 
         allocation = Allocation(block_count, translation_table)
 
