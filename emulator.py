@@ -18,8 +18,8 @@
 import sys
 import tkinter
 from tkinter import filedialog
-import gui.real_machine as rm_gui
-import gui.virtual_machine as vm_gui
+from gui import real_machine as rm_gui
+from gui import virtual_machine as vm_gui
 from darom import rm
 
 
@@ -27,11 +27,11 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
     virtual_machine_id = real_machine.vm_count
 
     program_file = filedialog.askopenfile(
-        title="Choose a program to laod..."
+        title='Choose a program to laod...'
     )
     code = program_file.read()
     program_file.close()
-    program_file = open(program_file.name, "r")
+    program_file = open(program_file.name, 'r')
 
     real_machine.load(assembler.assemble(program_file))
 
@@ -48,7 +48,7 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
 def main():
     window = tkinter.Tk()
     window.resizable(width=False, height=False)
-    window.title("Emulator")
+    window.title('Emulator')
 
     real_machine = rm.RM()
     assembler = rm.Assembler(real_machine.cpu)
@@ -56,9 +56,9 @@ def main():
     real_machine_gui = rm_gui.MachineFrame(window, real_machine)
 
     load_program_button = tkinter.Button(
-        window, text="Load program", command=lambda: start_virtual_machine(
+        window, text='Load program', command=lambda: start_virtual_machine(
             window, real_machine_gui, real_machine, assembler))
-    load_program_button.pack(side="bottom")
+    load_program_button.pack(side='bottom')
 
     window.mainloop()
 

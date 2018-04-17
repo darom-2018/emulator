@@ -37,14 +37,14 @@ class ProcessorFrame:
         self.registers = []
 
         self.frame = tkinter.LabelFrame(
-            window, text="Processor", padx=5, pady=5, height=10)
-        self.frame.pack(side="top")
+            window, text='Processor', padx=5, pady=5, height=10)
+        self.frame.pack(side='top')
 
         column = 0
         for register in range(1, len(self.Registers) + 1):
             column += 1
             label = tkinter.Label(
-                self.frame, text="{}:".format(
+                self.frame, text='{}:'.format(
                     self.Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
@@ -60,8 +60,8 @@ class ProcessorFrame:
 
 class MemoryFrame:
     def __init__(self, window):
-        self.frame = tkinter.LabelFrame(window, text="Memory", padx=5, pady=5)
-        self.frame.pack(side="top")
+        self.frame = tkinter.LabelFrame(window, text='Memory', padx=5, pady=5)
+        self.frame.pack(side='top')
 
         self.columns, self.rows = 32, 33
         self.cells = []
@@ -78,14 +78,14 @@ class MachineFrame:
         self.rm = rm
 
         self.frame = tkinter.LabelFrame(
-            window, text="Real Machine", padx=5, pady=5)
-        self.frame.pack(side="top")
+            window, text='Real Machine', padx=5, pady=5)
+        self.frame.pack(side='top')
         self.processor_frame = ProcessorFrame(self.frame)
         self.memory_frame = MemoryFrame(self.frame)
 
         change_button = tkinter.Button(
-            self.frame, text="Change memory & registers", command=self.modify)
-        change_button.pack(side="bottom")
+            self.frame, text='Change memory & registers', command=self.modify)
+        change_button.pack(side='bottom')
 
         self.update()
 
@@ -95,7 +95,7 @@ class MachineFrame:
 
     def update_registers(self):
         for register in self.processor_frame.registers:
-            register.delete(0, "end")
+            register.delete(0, 'end')
 
         self.processor_frame.registers[0].insert(0, self.rm.cpu.ptr)
         self.processor_frame.registers[1].insert(0, self.rm.cpu.pc)
@@ -115,7 +115,7 @@ class MachineFrame:
             memory.append(word)
 
         for i in range(len(memory)):
-            self.memory_frame.cells[i].delete(0, "end")
+            self.memory_frame.cells[i].delete(0, 'end')
             self.memory_frame.cells[i].insert(0, memory[i].hex())
 
     def modify(self):
@@ -126,5 +126,5 @@ class MachineFrame:
         pass
 
     def set_memory(self):
-        # struct.pack("<B", 5)
+        # struct.pack('<B', 5)
         pass

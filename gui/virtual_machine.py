@@ -31,15 +31,15 @@ class ProcessorFrame:
 
     def __init__(self, window):
         self.frame = tkinter.LabelFrame(
-            window, text="Processor", padx=5, pady=5, height=10)
-        self.frame.pack(side="top")
+            window, text='Processor', padx=5, pady=5, height=10)
+        self.frame.pack(side='top')
         self.registers = []
 
         column = 0
         for register in range(1, len(self.Registers) + 1):
             column += 1
             label = tkinter.Label(
-                self.frame, text="{}:".format(
+                self.frame, text='{}:'.format(
                     self.Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
@@ -50,8 +50,8 @@ class ProcessorFrame:
 
 class MemoryFrame:
     def __init__(self, window):
-        self.frame = tkinter.LabelFrame(window, text="Memory", padx=5, pady=5)
-        self.frame.pack(side="top")
+        self.frame = tkinter.LabelFrame(window, text='Memory', padx=5, pady=5)
+        self.frame.pack(side='top')
 
         self.columns, self.rows = 16, 16
         self.cells = []
@@ -66,40 +66,40 @@ class MemoryFrame:
 class IOFrame:
     def __init__(self, window):
         self.frame = tkinter.LabelFrame(
-            window, text="I/O", padx=5, pady=5)
-        self.frame.pack(side="top")
+            window, text='I/O', padx=5, pady=5)
+        self.frame.pack(side='top')
 
         self.input_frame = tkinter.LabelFrame(
-            self.frame, text="Input", padx=5, pady=5)
-        self.input_frame.pack(side="top")
+            self.frame, text='Input', padx=5, pady=5)
+        self.input_frame.pack(side='top')
 
         self.output_frame = tkinter.LabelFrame(
-            self.frame, text="Output", padx=5, pady=5)
-        self.output_frame.pack(side="top")
+            self.frame, text='Output', padx=5, pady=5)
+        self.output_frame.pack(side='top')
 
         self.input_entry = tkinter.Entry(self.input_frame, width=45)
-        self.input_entry.pack(side="top")
+        self.input_entry.pack(side='top')
 
         self.output_label = scrolledtext.ScrolledText(
             self.output_frame, width=32, height=5)
-        self.output_label.pack(side="top")
+        self.output_label.pack(side='top')
         self.output_label.config(state=tkinter.DISABLED)
 
 
 class ProgramFrame:
     def __init__(self, window, code):
         self.frame = tkinter.LabelFrame(
-            window, text="Program", padx=5, pady=5)
-        self.frame.pack(side="top")
+            window, text='Program', padx=5, pady=5)
+        self.frame.pack(side='top')
 
         code_box = scrolledtext.ScrolledText(
             self.frame, width=80, height=37)
-        code_box.pack(side="top")
+        code_box.pack(side='top')
 
         code = code.split('\n')
-        text = ""
+        text = ''
         for i in range(len(code)):
-            text += "{:02X}: {}\n".format(i, code[i])
+            text += '{:02X}: {}\n'.format(i, code[i])
         code_box.insert(tkinter.END, text)
         code_box.config(state=tkinter.DISABLED)
 
@@ -115,8 +115,8 @@ class MachineFrame:
         self.code = code
 
         self.frame = tkinter.LabelFrame(
-            window, text="Virtual Machine", padx=5, pady=5)
-        self.frame.pack(side="left")
+            window, text='Virtual Machine', padx=5, pady=5)
+        self.frame.pack(side='left')
 
         self.io_frame = IOFrame(self.frame)
         self.processor_frame = ProcessorFrame(self.frame)
@@ -125,25 +125,25 @@ class MachineFrame:
 
         input_button = tkinter.Button(
             self.io_frame.input_frame,
-            text="Input",
+            text='Input',
             command=self.input)
-        input_button.pack(side="bottom")
+        input_button.pack(side='bottom')
 
         step_button = tkinter.Button(
             self.program_frame.frame,
-            text="Step",
+            text='Step',
             command=self.step)
-        step_button.pack(side="right")
+        step_button.pack(side='right')
 
         run_buton = tkinter.Button(
             self.program_frame.frame,
-            text="Run",
+            text='Run',
             command=self.run)
-        run_buton.pack(side="right")
+        run_buton.pack(side='right')
 
         change_button = tkinter.Button(
-            self.frame, text="Change memory & registers", command=self.modify)
-        change_button.pack(side="bottom")
+            self.frame, text='Change memory & registers', command=self.modify)
+        change_button.pack(side='bottom')
 
         self.update()
 
@@ -169,7 +169,7 @@ class MachineFrame:
 
     def update_registers(self):
         for register in self.processor_frame.registers:
-            register.delete(0, "end")
+            register.delete(0, 'end')
 
         self.processor_frame.registers[0].insert(0, self.vm.cpu.pc)
         self.processor_frame.registers[1].insert(0, self.vm.cpu.sp)
@@ -190,7 +190,7 @@ class MachineFrame:
             memory.append(word)
 
         for i in range(len(memory)):
-            self.memory_frame.cells[i].delete(0, "end")
+            self.memory_frame.cells[i].delete(0, 'end')
             self.memory_frame.cells[i].insert(0, memory[i].hex())
 
     def modify(self):
@@ -201,5 +201,5 @@ class MachineFrame:
         pass
 
     def set_memory(self):
-        # struct.pack("<B", 5)
+        # struct.pack('<B', 5)
         pass
