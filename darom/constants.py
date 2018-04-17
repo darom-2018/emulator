@@ -15,6 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-BLOCK_SIZE = 16
 WORD_SIZE = 2
 WORD_MAX = (2 ** (8 * WORD_SIZE)) - 1
+BLOCK_SIZE = 16 * WORD_SIZE

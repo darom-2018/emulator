@@ -53,6 +53,11 @@ class Memory:
     def block_size(self):
         return self._block_size
 
+    @property
+    def data(self):
+        # Flatten the matrix that represents the memory
+        return [cell for block in self._data for cell in block]
+
     def allocate(self, block_count):
         available_blocks = []
 
