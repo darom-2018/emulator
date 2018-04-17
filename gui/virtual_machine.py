@@ -19,6 +19,7 @@
 import enum
 import tkinter
 from tkinter import scrolledtext
+from darom import constants
 
 
 class ProcessorFrame:
@@ -32,6 +33,7 @@ class ProcessorFrame:
         self.frame = tkinter.LabelFrame(
             window, text="Processor", padx=5, pady=5, height=10)
         self.frame.pack(side="top")
+        self.registers = []
 
         column = 0
         for register in range(1, len(self.Registers) + 1):
@@ -41,7 +43,8 @@ class ProcessorFrame:
                     self.Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
-            entry = tkinter.Entry(self.frame, width=2)
+            entry = tkinter.Entry(self.frame, width=4)
+            self.registers.append(entry)
             entry.grid(row=1, column=column)
 
 
@@ -51,12 +54,12 @@ class MemoryFrame:
         self.frame.pack(side="top")
 
         self.columns, self.rows = 16, 16
-        self.memory = [None] * self.rows * self.columns
+        self.cells = []
 
         for row in range(self.rows):
             for column in range(self.columns):
-                entry = tkinter.Entry(self.frame, width=2)
-                self.memory.append(entry)
+                entry = tkinter.Entry(self.frame, width=4)
+                self.cells.append(entry)
                 entry.grid(row=row, column=column)
 
 
@@ -102,10 +105,13 @@ class ProgramFrame:
 
 
 class MachineFrame:
-    def __init__(self, window, virtual_machine, code):
+    def __init__(self, window, rm_gui, vm_id, vm, code):
         window = tkinter.Toplevel(window)
 
-        self.virtual_machine = virtual_machine
+        self.rm_gui = rm_gui
+        self.vm_id = vm_id
+        self.vm = vm
+        self.rm = self.vm.rm
         self.code = code
 
         self.frame = tkinter.LabelFrame(
@@ -136,8 +142,10 @@ class MachineFrame:
         run_buton.pack(side="right")
 
         change_button = tkinter.Button(
-            self.frame, text="Change memory & registers", command=self.update)
+            self.frame, text="Change memory & registers", command=self.modify)
         change_button.pack(side="bottom")
+
+        self.update()
 
     def input(self):
         pass
@@ -150,7 +158,48 @@ class MachineFrame:
         pass
 
     def run(self):
-        pass
+        self.rm.run(self.vm_id)
+        self.update()
 
     def update(self):
+        self.update_registers()
+        self.update_memory()
+        self.rm_gui.update_registers()
+        self.rm_gui.update_memory()
+
+    def update_registers(self):
+        for register in self.processor_frame.registers:
+            register.delete(0, "end")
+
+        self.processor_frame.registers[0].insert(0, self.vm.cpu.pc)
+        self.processor_frame.registers[1].insert(0, self.vm.cpu.sp)
+        self.processor_frame.registers[2].insert(0, self.vm.cpu.ds)
+        self.processor_frame.registers[3].insert(0, self.vm.cpu.flags.hex())
+
+        self.vm.rm.cpu.pc = self.vm.cpu.pc
+        self.vm.rm.cpu.sp = self.vm.cpu.sp
+        self.vm.rm.cpu.flags = self.vm.cpu.flags
+
+    def update_memory(self):
+        memory_allocation = self.vm.memory
+        memory = []
+        for i in range(0,
+                       memory_allocation.block_count * constants.BLOCK_SIZE,
+                       constants.WORD_SIZE):
+            word = self.vm.rm.memory.read_word(memory_allocation, i)
+            memory.append(word)
+
+        for i in range(len(memory)):
+            self.memory_frame.cells[i].delete(0, "end")
+            self.memory_frame.cells[i].insert(0, memory[i].hex())
+
+    def modify(self):
+        self.set_registers()
+        self.set_memory()
+
+    def set_registers(self):
+        pass
+
+    def set_memory(self):
+        # struct.pack("<B", 5)
         pass
