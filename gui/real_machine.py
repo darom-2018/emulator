@@ -48,14 +48,11 @@ class ProcessorFrame:
             label.grid(row=1, column=column)
             column += 1
             if register == self.Registers.PTR.value:
-                entry = tkinter.Label(
-                    self.frame, width=4, borderwidth=2, relief="groove")
+                entry = tkinter.Entry(self.frame, width=4)
             elif register < self.Registers.MODE.value:
-                entry = tkinter.Label(
-                    self.frame, width=2, borderwidth=2, relief="groove")
+                entry = tkinter.Entry(self.frame, width=2)
             else:
-                entry = tkinter.Label(
-                    self.frame, width=1, borderwidth=2, relief="groove")
+                entry = tkinter.Entry(self.frame, width=1)
             entry.grid(row=1, column=column)
 
 
@@ -69,8 +66,7 @@ class MemoryFrame:
 
         for row in range(self.rows):
             for column in range(self.columns):
-                entry = tkinter.Label(
-                    self.frame, width=2, borderwidth=2, relief="groove")
+                entry = tkinter.Entry(self.frame, width=2)
                 self.cells.append(entry)
                 entry.grid(row=row, column=column)
 
@@ -85,8 +81,9 @@ class MachineFrame:
         self.processor_frame = ProcessorFrame(self.frame)
         self.memory_frame = MemoryFrame(self.frame)
 
-    def update_memory_cell(self, row, column, value):
-        pass
+        change_button = tkinter.Button(
+            self.frame, text="Change memory & registers", command=self.update)
+        change_button.pack(side="bottom")
 
-    def update_register(self, register, value):
+    def update(self):
         pass
