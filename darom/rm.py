@@ -19,6 +19,7 @@
 from . import constants
 from . import exceptions
 from . import instructions
+from . import interrupt_handlers
 
 from .assembler import Assembler
 from .instruction import Instruction, IOInstruction
@@ -172,12 +173,32 @@ class RM:
         )
 
     def test(self):
-        if (self._cpu._pi + self._cpu._si) > 0:
+        pi_handlers = [
+            None,
+            interrupt_handlers.Incorrect_instruction_code,
+            interrupt_handlers.Incorrect_operand,
+            interrupt_handlers.Paging_error,
+            interrupt_handlers.Stack_overflow
+        ]
+        si_handlers = [
+            None,
+            interrupt_handlers.Halt,
+            interrupt_handlers.In,
+            interrupt_handlers.Ini,
+            interrupt_handlers.Out,
+            interrupt_handlers.Outi,
+            interrupt_handlers.Shread,
+            interrupt_handlers.Shwrite,
+            interrupt_handlers.Led
+        ]
+
+        if (self._cpu._pi) > 0:
+            pi_handlers[self._cpu._pi](self)
+        elif (self._cpu._si) > 0:
             self._dump_registers()
-            self._vm.cpu.halt()
+            si_handlers[self._cpu._si](self)
         elif self._cpu._ti <= 0:
-            self._dump_registers()
-            self._vm.cpu.halt()
+            interrupt_handlers.Timeout(self)
 
     def run(self):
         for vm, allocation in reversed(self._vms):
@@ -193,11 +214,11 @@ class RM:
                 try:
                     instruction = self.memory.read_byte(allocation, self._vm.cpu.pc)
                     self._vm.cpu.pc += 1
+                    # instruction = b'\xff'
                     instruction = self._cpu.instruction_set.find_by_code(instruction)()
                     if instruction.takes_arg:
                         instruction.arg = self.memory.read_word(allocation, self._vm.cpu.pc)
                         self._vm.cpu.pc += constants.WORD_SIZE
-
                     instruction.execute(self._vm)
                     if isinstance(instruction, IOInstruction):
                         self._cpu._ti -= 3

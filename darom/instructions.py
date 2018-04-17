@@ -329,14 +329,6 @@ class OUT(instruction.IOInstruction):
         super().__init__(b'\x52', 'OUT')
 
     def execute(self, vm):
-        block = int.from_bytes(vm.stack_pop(), byteorder='little')
-        word = int.from_bytes(vm.stack_pop(), byteorder='little')
-        character_count = int.from_bytes(vm.stack_pop(), byteorder='little')
-        string = bytes()
-        for i in range(character_count):
-            address = vm.cpu.ds + vm.rm.memory.translate_address(block, word)
-            string += vm.rm.memory.read_byte(vm.memory, address + i)
-        print(string.decode('ascii'))
         vm.rm.cpu.si = 4
 
 
