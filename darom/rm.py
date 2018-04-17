@@ -106,11 +106,7 @@ class RM:
         data_size, code_size = program.size()
 
         allocation = self.memory.allocate_bytes(
-            data_size +
-            code_size +
-            2 *
-            self.memory.block_size *
-            constants.WORD_SIZE)
+            data_size + code_size + 2 * self.memory.block_size * constants.WORD_SIZE)
 
         data_bytes, code_bytes = program.as_bytes()
 
