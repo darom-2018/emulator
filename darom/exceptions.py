@@ -24,5 +24,8 @@ class UnknownCommandMnemonic(Exception):
 class PagingError(Exception):
     pass
 
+class IncorrectOperand(Exception):
+    pass
+
 class StackOverflow(Exception):
     pass

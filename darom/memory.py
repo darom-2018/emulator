@@ -69,6 +69,7 @@ class Memory:
             )
 
         chosen_blocks = random.choices(available_blocks, k=block_count)
+        print(chosen_blocks)
         translation_table = {}
 
         for block, i in zip(chosen_blocks, range(block_count)):

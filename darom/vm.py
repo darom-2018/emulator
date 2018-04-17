@@ -28,7 +28,7 @@ class CPU:
 
     @property
     def halted(self):
-        return self._halted
+            return self._halted
 
     def halt(self):
         self._halted = True
@@ -74,5 +74,5 @@ class VM:
         try:
             head = self.rm.memory.write_word(allocation, self.cpu.sp, word)
         except exceptions.PagingError:
-            raise exceptions.StackOverflow(self.cpu.sp)
+            self._rm.cpu.pi = 4
         self.cpu.sp += constants.WORD_SIZE

@@ -16,10 +16,11 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import constants
+from . import exceptions
 from . import instruction
 
 import operator
-
+import pdb
 
 class NOP(instruction.Instruction):
     def __init__(self):
@@ -31,7 +32,7 @@ class HALT(instruction.Instruction):
         super().__init__(b'\x01', 'HALT')
 
     def execute(self, vm):
-        vm.cpu.halt()
+        vm.rm.cpu.si = 1
 
 
 class DUP(instruction.Instruction):
@@ -311,18 +312,19 @@ class IN(instruction.Instruction):
         super().__init__(b'\x50', 'IN')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 2
+        #uzsetting kanalo irengini
 
 
-class INI(instruction.Instruction):
+class INI(instruction.IOInstruction):
     def __init__(self):
         super().__init__(b'\x51', 'INI')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 3
+        #uzsetting kanalo irengini
 
-
-class OUT(instruction.Instruction):
+class OUT(instruction.IOInstruction):
     def __init__(self):
         super().__init__(b'\x52', 'OUT')
 
@@ -335,14 +337,15 @@ class OUT(instruction.Instruction):
             address = vm.cpu.ds + vm.rm.memory.translate_address(block, word)
             string += vm.rm.memory.read_byte(vm.memory, address + i)
         print(string.decode('ascii'))
+        vm.rm.cpu.si = 4
 
 
-class OUTI(instruction.Instruction):
+class OUTI(instruction.IOInstruction):
     def __init__(self):
         super().__init__(b'\x53', 'OUTI')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 5
 
 
 class SHREAD(instruction.Instruction):
@@ -350,7 +353,7 @@ class SHREAD(instruction.Instruction):
         super().__init__(b'\x60', 'SHREAD')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 6
 
 
 class SHWRITE(instruction.Instruction):
@@ -358,7 +361,7 @@ class SHWRITE(instruction.Instruction):
         super().__init__(b'\x61', 'SHWRITE')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 7
 
 
 class SHLOCK(instruction.Instruction):
@@ -374,4 +377,4 @@ class LED(instruction.Instruction):
         super().__init__(b'\x70', 'LED')
 
     def execute(self, vm):
-        pass
+        vm.rm.cpu.si = 8

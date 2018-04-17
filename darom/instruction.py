@@ -73,17 +73,25 @@ class BinaryOperation(Instruction):
         lhs = int.from_bytes(vm.stack_pop(), byteorder='little')
         rhs = int.from_bytes(vm.stack_pop(), byteorder='little')
 
-        result = self._operator(lhs, rhs)
+        try:
+            result = self._operator(lhs, rhs)
 
-        cf = result < 0 or result > constants.WORD_MAX
-        pf = (result % 2) == 0
+            cf = result < 0 or result > constants.WORD_MAX
+            pf = (result % 2) == 0
 
-        result = result & constants.WORD_MAX
+            result = result & constants.WORD_MAX
 
-        # This is intentional, as the result can overflow
-        zf = result == 0
+            # This is intentional, as the result can overflow
+            zf = result == 0
 
-        vm.cpu.flags[0] = cf & 1
-        vm.cpu.flags[1] = ((pf & 1) << 4) | (zf & 1)
+            vm.cpu.flags[0] = cf & 1
+            vm.cpu.flags[1] = ((pf & 1) << 4) | (zf & 1)
 
-        vm.stack_push(result.to_bytes(constants.WORD_SIZE, byteorder='little'))
+            vm.stack_push(result.to_bytes(constants.WORD_SIZE, byteorder='little'))
+        except ZeroDivisionError:
+            vm.rm.cpu.pi = 2
+
+
+class IOInstruction(Instruction):
+    def __init__(self, code, mnemonic):
+        super().__init__(code, mnemonic)

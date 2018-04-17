@@ -21,7 +21,7 @@ from . import exceptions
 from . import instructions
 
 from .assembler import Assembler
-from .instruction import Instruction
+from .instruction import Instruction, IOInstruction
 from .memory import Memory
 from .vm import VM
 
@@ -72,13 +72,37 @@ class HLP:
         self._shm = 0
         self._pi = 0
         self._si = 0
-        self._ti = 0
+        self._ti = 100
 
         self._instruction_set = _DaromInstructionSet()
 
     @property
     def instruction_set(self):
         return self._instruction_set
+
+    @property
+    def pi(self):
+        return self._pi
+
+    @pi.setter
+    def pi(self, value):
+        self._pi = value
+
+    @property
+    def si(self):
+        return self._si
+
+    @si.setter
+    def si(self, value):
+        self._si = value
+
+    @property
+    def ti(self):
+        return self._ti
+
+    @ti.setter
+    def ti(self, value):
+        self._ti = value
 
 
 class RM:
@@ -148,9 +172,12 @@ class RM:
         )
 
     def test(self):
-        if (self._cpu._pi + self._cpu._si + self._cpu._ti) > 0:
+        if (self._cpu._pi + self._cpu._si) > 0:
             self._dump_registers()
-            self._vm.cpu.halt();
+            self._vm.cpu.halt()
+        elif self._cpu._ti <= 0:
+            self._dump_registers()
+            self._vm.cpu.halt()
 
     def run(self):
         for vm, allocation in reversed(self._vms):
@@ -172,12 +199,14 @@ class RM:
                         self._vm.cpu.pc += constants.WORD_SIZE
 
                     instruction.execute(self._vm)
+                    if isinstance(instruction, IOInstruction):
+                        self._cpu._ti -= 3
+                    else:
+                        self._cpu._ti -= 1
                 except exceptions.UnknownCommandCode as e:
-                    self._cpu._pi = 1;
+                    self._cpu._pi = 1
                 except exceptions.PagingError as e:
-                    self._cpu._pi = 3;
-                except exceptions.StackOverflow as e:
-                    self._cpu._pi = 4;
+                    self._cpu._pi = 3
                 self.test()
 
 
