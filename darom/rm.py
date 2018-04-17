@@ -35,9 +35,8 @@ import pdb
 
 class InstructionSet():
     def __init__(self, instructions):
-        self._mnemonic_dict = {
-            instruction.mnemonic: type(instruction) for instruction in instructions
-        }
+        self._mnemonic_dict = {instruction.mnemonic: type(
+            instruction) for instruction in instructions}
         self._code_dict = {
             instruction.code: type(instruction) for instruction in instructions
         }
@@ -68,12 +67,15 @@ class HLP:
     def __init__(self):
         self._vpu = None
 
-        self._mode = 0
-        self._ptr = 0
-        self._shm = 0
-        self._pi = 0
-        self._si = 0
-        self._ti = 100
+        self.ptr = 0
+        self.pc = 0
+        self.sp = 0
+        self.shm = 0
+        self.flags = bytearray(2)
+        self.mode = 0
+        self.si = 0
+        self.pi = 0
+        self.ti = 100
 
         self._instruction_set = _DaromInstructionSet()
 
@@ -109,7 +111,7 @@ class HLP:
 class RM:
     def __init__(self):
         self._cpu = HLP()
-        self._memory = Memory(66, 16)
+        self._memory = Memory(66, constants.BLOCK_SIZE // constants.WORD_SIZE)
         self._shared_memory = self._memory.allocate(2)
         self._vms = []
 
@@ -121,6 +123,14 @@ class RM:
     def memory(self):
         return self._memory
 
+    @property
+    def vm_count(self):
+        return len(self._vms)
+
+    @property
+    def last_vm(self):
+        return self._vms[-1][0]
+
     def get_memory_allocation_for_vm(self, vm):
         for k, v in self._vms:
             if k is vm:
@@ -130,8 +140,7 @@ class RM:
         data_size, code_size = program.size()
 
         allocation = self.memory.allocate_bytes(
-            data_size + code_size + 2 * self.memory.block_size * constants.WORD_SIZE
-        )
+            data_size + code_size + 2 * self.memory.block_size * constants.WORD_SIZE)
 
         data_bytes, code_bytes = program.as_bytes()
 
@@ -202,10 +211,9 @@ class RM:
         elif self._cpu._ti <= 0:
             interrupt_handlers.Timeout(self)
 
-    def run(self):
-        for vm, allocation in reversed(self._vms):
+    def run(self, vm_id):
+        self._vm, allocation = self._vms[vm_id]
             print('Running {}'.format(vm.program.name))
-            self._vm = vm
 
             while self._vm.running:
                 # print('Memory dump:')
@@ -231,19 +239,3 @@ class RM:
                 except exceptions.PagingError as e:
                     self._cpu._pi = 3
                 self.test()
-
-
-def run():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('files', nargs='+', type=open, metavar='FILE')
-
-    args = parser.parse_args()
-
-    rm = RM()
-    assembler = Assembler(rm.cpu)
-
-    for file in args.files:
-        print('Loading {}'.format(file.name))
-        rm.load(assembler.assemble(file))
-
-    rm.run()
