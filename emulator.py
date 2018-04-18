@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # © 2018 Ernestas Kulik, Tautvydas Baliukynas
 
 # This file is part of Darom.
