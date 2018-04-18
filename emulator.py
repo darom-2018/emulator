@@ -71,7 +71,7 @@ def main():
 
         load_program_button = tkinter.Button(
             window, text='Load program', command=lambda: start_virtual_machine(
-                window, real_machine_gui, rm, assembler))
+                window, real_machine_gui, rm))
         load_program_button.pack(side='bottom')
 
         window.mainloop()
