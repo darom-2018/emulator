@@ -17,12 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import sys
 import tkinter
-from tkinter import filedialog
+from darom.assembler import Assembler
+from darom.rm import RM
 from gui import real_machine as rm_gui
 from gui import virtual_machine as vm_gui
-from darom import rm
+from tkinter import filedialog
 
 
 def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
@@ -48,21 +50,32 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
 
 
 def main():
-    window = tkinter.Tk()
-    window.resizable(width=False, height=False)
-    window.title('Emulator')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('files', nargs='+', type=open, metavar='FILE')
+    parser.add_argument('--cli', action='store_true')
 
-    real_machine = rm.RM()
-    assembler = rm.Assembler(real_machine.cpu)
+    args = parser.parse_args()
+    rm = RM()
+    assembler = Assembler(rm.cpu)
 
-    real_machine_gui = rm_gui.MachineFrame(window, real_machine)
+    if args.cli:
+        for file, i in zip(args.files, range(len(args.files))):
+            print('Loading {}'.format(file.name))
+            rm.load(assembler.assemble(file))
+            rm.run(i)
+    else:
+        window = tkinter.Tk()
+        window.resizable(width=False, height=False)
+        window.title('Emulator')
 
-    load_program_button = tkinter.Button(
-        window, text='Load program', command=lambda: start_virtual_machine(
-            window, real_machine_gui, real_machine, assembler))
-    load_program_button.pack(side='bottom')
+        real_machine_gui = rm_gui.MachineFrame(window, rm)
 
-    window.mainloop()
+        load_program_button = tkinter.Button(
+            window, text='Load program', command=lambda: start_virtual_machine(
+                window, real_machine_gui, rm, assembler))
+        load_program_button.pack(side='bottom')
+
+        window.mainloop()
 
 
 if __name__ == '__main__':
