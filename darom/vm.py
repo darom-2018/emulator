@@ -21,44 +21,11 @@ from . import exceptions
 
 class CPU:
     def __init__(self):
-        self._pc = 0
-        self._sp = 0
-        self._ds = 0
-        self._flags = bytearray(2)
+        self.pc = 0
+        self.sp = 0
+        self.ds = 0
+        self.flags = bytearray(2)
         self._halted = False
-
-    @property
-    def pc(self):
-        return self._pc
-
-    @pc.setter
-    def pc(self, value):
-        self._pc = value
-
-    @property
-    def sp(self):
-        return self._sp
-
-    @sp.setter
-    def sp(self, value):
-        self._sp = value
-
-    @property
-    def ds(self):
-        return self._ds
-
-    @ds.setter
-    def ds(self, value):
-        self._ds = value
-
-    @property
-    def flags(self):
-        return int.from_bytes(self._flags, byteorder='little')
-
-    @flags.setter
-    def flags(self, value):
-        self._flags[0] = value[0]
-        self._flags[1] = value[1]
 
     def test_flags(self):
         return self._flags[0], self._flags[1] & 0x10, self._flags[1] & 1
@@ -82,10 +49,6 @@ class VM:
         return self._cpu
 
     @property
-    def memory(self):
-        return self.rm.get_memory_allocation_for_vm(self)
-
-    @property
     def program(self):
         return self._program
 
@@ -98,16 +61,13 @@ class VM:
         return not self._cpu.halted
 
     def stack_pop(self):
-        allocation = self.memory
         self.cpu.sp -= constants.WORD_SIZE
-        head = self.rm.memory.read_virtual_word(allocation, self.cpu.sp)
+        head = self.rm.memory.read_word(self.cpu.sp, virtual=True)
         return head
 
     def stack_push(self, word):
-        allocation = self.memory
         try:
-            head = self.rm.memory.write_virtual_word(
-                allocation, self.cpu.sp, word)
-        except exceptions.PagingError:
+            head = self.rm.memory.write_word(self.cpu.sp, word, virtual=True)
+        except exceptions.PageFaultError:
             self._rm.cpu.pi = 4
         self.cpu.sp += constants.WORD_SIZE

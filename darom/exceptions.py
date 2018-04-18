@@ -16,13 +16,13 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class UnknownCommandCode(Exception):
+class InvalidInstructionCodeError(Exception):
     pass
 
 
-class UnknownCommandMnemonic(Exception):
+class InvalidInstructionMnemonicError(Exception):
     pass
 
 
-class PagingError(Exception):
+class PageFaultError(Exception):
     pass

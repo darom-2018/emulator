@@ -36,8 +36,8 @@ class AssemblerError(Exception):
 class Assembler():
     def __init__(self, cpu):
         self._cpu = cpu
-        self._lexer = lex.lex(module=self, debug=True)
-        self._parser = yacc.yacc(module=self, debug=True)
+        self._lexer = lex.lex(module=self)
+        self._parser = yacc.yacc(module=self)
         self._labels = {}
 
     # Lexer

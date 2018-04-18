@@ -35,7 +35,6 @@ class Registers(enum.Enum):
 
 
 class ProcessorFrame:
-
     def __init__(self, window):
         self.registers = []
 
@@ -69,7 +68,7 @@ class MemoryFrame:
         self.frame = tkinter.LabelFrame(window, text='Memory', padx=5, pady=5)
         self.frame.pack(side='top')
 
-        self.columns, self.rows = 32, 33
+        self.columns, self.rows = 32, 35
         self.cells = []
 
         for row in range(self.rows):
@@ -111,7 +110,7 @@ class MachineFrame:
             self.processor_frame.registers[Registers.SP.value].insert(
                 0, format(self.rm.current_vm.cpu.sp, '04X'))
             self.processor_frame.registers[Registers.FLAGS.value].insert(
-                0, format(self.rm.current_vm.cpu.flags, '04X'))
+                0, self.rm.current_vm.cpu.flags.hex().upper())
         else:
             self.processor_frame.registers[Registers.PC.value].insert(
                 0, format(0, '04X'))
@@ -121,7 +120,7 @@ class MachineFrame:
                 0, format(0, '04X'))
 
         self.processor_frame.registers[Registers.PTR.value].insert(
-            0, format(self.rm.cpu.ptr, '08X'))
+            0, self.rm.cpu.ptr.hex().upper())
         self.processor_frame.registers[Registers.SHM.value].insert(
             0, format(self.rm.cpu.shm, '04X'))
         self.processor_frame.registers[Registers.MODE.value].insert(
@@ -135,10 +134,9 @@ class MachineFrame:
 
     def update_memory(self):
         memory = []
-        for i in range(0, len(self.rm.memory.data), 2):
-            word = bytes()
-            word += self.rm.memory.data[i] + self.rm.memory.data[i + 1]
-            memory.append(word)
+        for page in self.rm.memory._pages:
+            for word in page:
+                memory.append(word)
 
         for i in range(len(memory)):
             self.memory_frame.cells[i].delete(0, 'end')
@@ -155,10 +153,10 @@ class MachineFrame:
                 self.processor_frame.registers[Registers.PC.value].get(), 16)
             self.rm.current_vm.cpu.sp = int(
                 self.processor_frame.registers[Registers.SP.value].get(), 16)
-            self.rm.current_vm.cpu.flags = (struct.pack('<H', int(
+            self.rm.current_vm.cpu.flags = bytearray(struct.pack('<H', int(
                 self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
-        self.rm.cpu.ptr = int(
-            self.processor_frame.registers[Registers.PTR.value].get(), 16)
+        self.rm.cpu.ptr = bytearray(struct.pack('<H', int(
+            self.processor_frame.registers[Registers.PTR.value].get(), 16)))
         self.rm.cpu.shm = int(
             self.processor_frame.registers[Registers.SHM.value].get(), 16)
         self.rm.cpu.mode = int(

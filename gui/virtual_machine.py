@@ -21,6 +21,7 @@ import tkinter
 from tkinter import scrolledtext
 import struct
 from darom import constants
+from darom import util
 
 
 class Registers(enum.Enum):
@@ -184,16 +185,18 @@ class MachineFrame:
         self.processor_frame.registers[Registers.DS.value].insert(
             0, format(self.vm.cpu.ds, '04X'))
         self.processor_frame.registers[Registers.FLAGS.value].insert(
-            0, format(self.vm.cpu.flags, '04X'))
+            0, format(
+                int.from_bytes(self.vm.cpu.flags, byteorder=constants.BYTE_ORDER), '04X'
+            )
+        )
 
     def update_memory(self):
-        memory_allocation = self.vm.memory
         memory = []
-        for i in range(0,
-                       memory_allocation.block_count * constants.BLOCK_SIZE,
-                       constants.WORD_SIZE):
-            word = self.vm.rm.memory.read_virtual_word(memory_allocation, i)
-            memory.append(word)
+
+        for i in range(self.rm.cpu.ptr[1]):
+            for j in range(constants.PAGE_SIZE):
+                address = util.to_byte_address(i, j)
+                memory.append(self.rm.memory.read_word(address, virtual=True))
 
         for i in range(len(memory)):
             self.memory_frame.cells[i].delete(0, 'end')
@@ -211,11 +214,14 @@ class MachineFrame:
             self.processor_frame.registers[Registers.SP.value].get(), 16)
         self.vm.cpu.ds = int(
             self.processor_frame.registers[Registers.DS.value].get(), 16)
-        self.vm.cpu.flags = (struct.pack('<H', int(
+        self.vm.cpu.flags = bytearray(struct.pack('<H', int(
             self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
 
     def set_memory(self):
         for i in range(len(self.memory_frame.cells)):
             if self.memory_frame.cells[i].get():
-                self.rm.memory.write_virtual_word(
-                    self.vm.memory, i * 2, struct.pack('>H', int(self.memory_frame.cells[i].get(), 16)))
+                self.rm.memory.write_word(
+                    i * 2,
+                    struct.pack('>H', int(self.memory_frame.cells[i].get(), 16)),
+                    virtual=True
+                )

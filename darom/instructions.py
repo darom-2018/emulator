@@ -42,9 +42,9 @@ class DUP(instruction.Instruction):
 
     def execute(self, vm):
         allocation = vm.rm.get_memory_allocation_for_vm(vm)
-        head = vm.rm.memory.read_virtual_word(allocation, vm.cpu.sp)
+        head = vm.rm.memory.read_word(allocation, vm.cpu.sp, virtual=True)
         vm.cpu.sp += constants.WORD_SIZE
-        vm.rm.memory.write_virtual_word(allocation, vm.cpu.sp, head)
+        vm.rm.memory.write_word(allocation, vm.cpu.sp, head, virtual=True)
 
 
 class POP(instruction.Instruction):
@@ -55,23 +55,18 @@ class POP(instruction.Instruction):
         vm.stack_pop()
 
 
-def to_byte_address(vm, block, word):
-    return (vm.cpu.ds + (block * vm.rm.memory.block_size *
-                         constants.WORD_SIZE) + (word * constants.WORD_SIZE))
-
-
 class POPM(instruction.Instruction):
     def __init__(self):
         super().__init__(b'\x12', 'POPM')
 
     def execute(self, vm):
         word = int.from_bytes(vm.stack_pop(), byteorder='little')
-        block = int.from_bytes(vm.stack_pop(), byteorder='little')
+        page = int.from_bytes(vm.stack_pop(), byteorder='little')
         head = vm.stack_pop()
 
-        vm.rm.memory.write_virtual_word(
-            vm.memory, to_byte_address(
-                vm, block, word), head)
+        byte_address = util.to_byte_address(page, word)
+
+        vm.rm.memory.write_word(byte_address, head)
 
 
 class PUSH(instruction.Instruction):
@@ -88,11 +83,12 @@ class PUSHM(instruction.Instruction):
 
     def execute(self, vm):
         word = int.from_bytes(vm.stack_pop(), byteorder='little')
-        block = int.from_bytes(vm.stack_pop(), byteorder='little')
+        page = int.from_bytes(vm.stack_pop(), byteorder='little')
 
-        word = vm.rm.memory.read_virtual_word(
-            vm.memory, to_byte_address(
-                vm, block, word))
+        byte_address = util.to_byte_address(page, word)
+
+        word = vm.rm.memory.read_word(byte_address)
+
         vm.stack_push(word)
 
 
