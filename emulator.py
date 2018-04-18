@@ -51,7 +51,7 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('files', nargs='+', type=open, metavar='FILE')
+    parser.add_argument('files', nargs='*', type=open, metavar='FILE')
     parser.add_argument('--cli', action='store_true')
 
     args = parser.parse_args()
