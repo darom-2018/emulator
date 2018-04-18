@@ -29,7 +29,7 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
     virtual_machine_id = real_machine.vm_count
 
     program_file = filedialog.askopenfile(
-        title='Choose a program to laod...'
+        title='Choose a program to load...'
     )
     code = program_file.read()
     program_file.close()
@@ -37,14 +37,14 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
 
     real_machine.load(assembler.assemble(program_file))
 
-    virutal_machine_gui = vm_gui.MachineFrame(
+    virtual_machine_gui = vm_gui.MachineFrame(
         window,
         real_machine_gui,
         virtual_machine_id,
         real_machine.last_vm,
         code)
 
-    virutal_machine_gui.update()
+    virtual_machine_gui.update()
 
 
 def main():
