@@ -27,7 +27,7 @@ from gui import virtual_machine as vm_gui
 from tkinter import filedialog
 
 
-def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
+def start_virtual_machine(window, real_machine_gui, real_machine):
     virtual_machine_id = real_machine.vm_count
 
     program_file = filedialog.askopenfile(
@@ -37,7 +37,7 @@ def start_virtual_machine(window, real_machine_gui, real_machine, assembler):
     program_file.close()
     program_file = open(program_file.name, 'r')
 
-    real_machine.load(assembler.assemble(program_file))
+    real_machine.load(Assembler(real_machine.cpu).assemble(program_file))
 
     virtual_machine_gui = vm_gui.MachineFrame(
         window,
@@ -56,12 +56,11 @@ def main():
 
     args = parser.parse_args()
     rm = RM()
-    assembler = Assembler(rm.cpu)
 
     if args.cli:
         for file, i in zip(args.files, range(len(args.files))):
             print('Loading {}'.format(file.name))
-            rm.load(assembler.assemble(file))
+            rm.load(Assembler(rm.cpu).assemble(file))
             rm.run(i)
     else:
         window = tkinter.Tk()
