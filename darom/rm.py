@@ -26,7 +26,6 @@ from .instruction import Instruction, IOInstruction
 from .memory import Memory
 from .vm import VM
 
-import argparse
 import inspect
 import sys
 
