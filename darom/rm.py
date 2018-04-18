@@ -213,7 +213,7 @@ class RM:
 
     def run(self, vm_id):
         self._vm, allocation = self._vms[vm_id]
-        print('Running {}'.format(vm.program.name))
+        print('Running {}'.format(self._vm.program.name))
 
         while self._vm.running:
             # print('Memory dump:')
