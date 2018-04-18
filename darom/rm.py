@@ -17,16 +17,20 @@
 
 
 from . import constants
+from . import exceptions
 from . import instructions
+from . import interrupt_handlers
 
 from .assembler import Assembler
-from .instruction import Instruction
+from .instruction import Instruction, IOInstruction
 from .memory import Memory
 from .vm import VM
 
 import argparse
 import inspect
 import sys
+
+import pdb
 
 
 class InstructionSet():
@@ -38,10 +42,16 @@ class InstructionSet():
         }
 
     def find_by_mnemonic(self, mnemonic):
-        return self._mnemonic_dict.get(mnemonic, None)
+        if mnemonic in self._mnemonic_dict:
+            return self._mnemonic_dict.get(mnemonic, None)
+        else:
+            raise exceptions.UnknownCommandMnemonic(mnemonic)
 
     def find_by_code(self, code):
-        return self._code_dict.get(code, None)
+        if code in self._code_dict:
+            return self._code_dict.get(code, None)
+        else:
+            raise exceptions.UnknownCommandCode(code)
 
 
 class _DaromInstructionSet(InstructionSet):
@@ -65,13 +75,37 @@ class HLP:
         self.mode = 0
         self.si = 0
         self.pi = 0
-        self.ti = 0
+        self.ti = 100
 
         self._instruction_set = _DaromInstructionSet()
 
     @property
     def instruction_set(self):
         return self._instruction_set
+
+    @property
+    def pi(self):
+        return self._pi
+
+    @pi.setter
+    def pi(self, value):
+        self._pi = value
+
+    @property
+    def si(self):
+        return self._si
+
+    @si.setter
+    def si(self, value):
+        self._si = value
+
+    @property
+    def ti(self):
+        return self._ti
+
+    @ti.setter
+    def ti(self, value):
+        self._ti = value
 
 
 class RM:
@@ -133,32 +167,75 @@ class RM:
             '\tPC: {}\n'
             '\tSP: {}\n'
             '\tDS: {}\n'
-            '\tFLAGS: {}'.format(
+            '\tFLAGS: {}\n'
+            '\tPI: {}\n'
+            '\tSI: {}\n'
+            '\tTI: {}\n'.format(
                 self._vm.cpu.pc,
                 self._vm.cpu.sp,
                 self._vm.cpu.ds,
-                self._vm.cpu.flags
+                self._vm.cpu.flags,
+                self._cpu._pi,
+                self._cpu._si,
+                self._cpu._ti
             )
         )
+
+    def test(self):
+        pi_handlers = [
+            None,
+            interrupt_handlers.Incorrect_instruction_code,
+            interrupt_handlers.Incorrect_operand,
+            interrupt_handlers.Paging_error,
+            interrupt_handlers.Stack_overflow
+        ]
+        si_handlers = [
+            None,
+            interrupt_handlers.Halt,
+            interrupt_handlers.In,
+            interrupt_handlers.Ini,
+            interrupt_handlers.Out,
+            interrupt_handlers.Outi,
+            interrupt_handlers.Shread,
+            interrupt_handlers.Shwrite,
+            interrupt_handlers.Shlock,
+            interrupt_handlers.Shunlock,
+            interrupt_handlers.Led
+        ]
+
+        if (self._cpu._pi) > 0:
+            pi_handlers[self._cpu._pi](self)
+        elif (self._cpu._si) > 0:
+            self._dump_registers()
+            si_handlers[self._cpu._si](self)
+        elif self._cpu._ti <= 0:
+            interrupt_handlers.Timeout(self)
 
     def run(self, vm_id):
         self._vm, allocation = self._vms[vm_id]
         print('Running {}'.format(self._vm.program.name))
 
         while self._vm.running:
-            print('Memory dump:')
-            self.memory._dump(allocation)
-            print('Register dump:')
-            self._dump_registers()
-
-            instruction = self.memory.read_byte(
-                allocation, self._vm.cpu.pc)
-            self._vm.cpu.pc += 1
-            instruction = self._cpu.instruction_set.find_by_code(
-                instruction)()
-            if instruction.takes_arg:
-                instruction.arg = self.memory.read_word(
-                    allocation, self._vm.cpu.pc)
-                self._vm.cpu.pc += constants.WORD_SIZE
-
-            instruction.execute(self._vm)
+            # print('Memory dump:')
+            # self.memory._dump(allocation)
+            # print('Register dump:')
+            # self._dump_registers()
+            # pdb.set_trace()
+            try:
+                instruction = self.memory.read_byte(allocation, self._vm.cpu.pc)
+                self._vm.cpu.pc += 1
+                # instruction = b'\xff'
+                instruction = self._cpu.instruction_set.find_by_code(instruction)()
+                if instruction.takes_arg:
+                    instruction.arg = self.memory.read_word(allocation, self._vm.cpu.pc)
+                    self._vm.cpu.pc += constants.WORD_SIZE
+                instruction.execute(self._vm)
+                if isinstance(instruction, IOInstruction):
+                    self._cpu._ti -= 3
+                else:
+                    self._cpu._ti -= 1
+            except exceptions.UnknownCommandCode as e:
+                self._cpu._pi = 1
+            except exceptions.PagingError as e:
+                self._cpu._pi = 3
+            self.test()

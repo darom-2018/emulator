@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_LED"
+$DATA
+$CODE
+    PUSH 255
+    PUSH 255
+    PUSH 255
+    LED
+    HALT
+$END

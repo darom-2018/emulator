@@ -16,6 +16,7 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import constants
+from . import exceptions
 
 import random
 
@@ -31,7 +32,7 @@ class Allocation:
 
     def translate(self, block):
         if block not in range(self._block_count):
-            raise Exception('Accessing block {} when {} were allocated'.format(
+            raise exceptions.PagingError('Accessing block {} when {} were allocated'.format(
                 block, self._block_count)
             )
         return self._translation_table[block]
