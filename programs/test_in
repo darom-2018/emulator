@@ -1,0 +1,11 @@
+$PROGRAM
+    "TEST_IN"
+$DATA
+    "Hello, world!"
+$CODE
+    PUSH 13
+    PUSH 0
+    PUSH 0
+    IN
+    HALT
+$END

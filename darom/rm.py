@@ -22,6 +22,7 @@ from . import instructions
 from . import interrupt_handlers
 
 from .assembler import Assembler
+from .channel_device import ChannelDevice
 from .instruction import Instruction, IOInstruction
 from .memory import Memory
 from .vm import VM
@@ -118,6 +119,7 @@ class RM:
         self._memory = Memory(66, constants.BLOCK_SIZE // constants.WORD_SIZE)
         self._shared_memory = self._memory.allocate(2)
         self._vms = []
+        self._channel_device = ChannelDevice(self)
 
     @property
     def cpu(self):
