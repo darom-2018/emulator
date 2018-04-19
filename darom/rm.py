@@ -106,6 +106,11 @@ class HLP:
     def ti(self, value):
         self._ti = value
 
+    def reset_registers(self):
+        self._si = 0
+        self._pi = 0
+        self._ti = 100
+
 
 class RM:
     def __init__(self):
@@ -136,6 +141,7 @@ class RM:
                 return v
 
     def load(self, program):
+        self.cpu.reset_registers()
         data_size, code_size = program.size()
 
         allocation = self.memory.allocate_bytes(
@@ -221,12 +227,15 @@ class RM:
             # self._dump_registers()
             # pdb.set_trace()
             try:
-                instruction = self.memory.read_byte(allocation, self._vm.cpu.pc)
+                instruction = self.memory.read_byte(
+                    allocation, self._vm.cpu.pc)
                 self._vm.cpu.pc += 1
                 # instruction = b'\xff'
-                instruction = self._cpu.instruction_set.find_by_code(instruction)()
+                instruction = self._cpu.instruction_set.find_by_code(
+                    instruction)()
                 if instruction.takes_arg:
-                    instruction.arg = self.memory.read_word(allocation, self._vm.cpu.pc)
+                    instruction.arg = self.memory.read_word(
+                        allocation, self._vm.cpu.pc)
                     self._vm.cpu.pc += constants.WORD_SIZE
                 instruction.execute(self._vm)
                 if isinstance(instruction, IOInstruction):
