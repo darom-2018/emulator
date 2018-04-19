@@ -230,7 +230,6 @@ class RM:
                 instruction = self.memory.read_byte(
                     allocation, self._vm.cpu.pc)
                 self._vm.cpu.pc += 1
-                # instruction = b'\xff'
                 instruction = self._cpu.instruction_set.find_by_code(
                     instruction)()
                 if instruction.takes_arg:

@@ -366,7 +366,7 @@ class SHLOCK(instruction.Instruction):
 
 class SHUNLOCK(instruction.Instruction):
     def __init__(self):
-        super().__init__(b'\x62', 'SHLOCK')
+        super().__init__(b'\x63', 'SHUNLOCK')
 
     def execute(self, vm):
         vm.rm.cpu.si = 9
