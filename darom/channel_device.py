@@ -37,5 +37,5 @@ class ChannelDevice():
     def write_stdoutput(self, data):
         self._rm.output_device.set_output(data)
 
-    def write_led(self, RGB):
-        self._rm.led_device.set_RGB(RGB)
+    def write_led(self, rgb):
+        self._rm.led_device.set_rgb(rgb)
