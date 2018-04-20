@@ -25,7 +25,7 @@ class ChannelDevice():
         self._rm = rm
 
     def read_stdinput(self, convert_to_int=False):
-        device_input = self._rm.input_device.get_input()
+        device_input = self._rm.input_device.input
         if convert_to_int:
             string = ""
             for byte in device_input:

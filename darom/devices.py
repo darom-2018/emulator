@@ -24,11 +24,8 @@ class InputDevice():
         for i in range(len(data)):
             self._memory.append(str.encode(data[i]))
 
-    def get_input(self):
-        # input = "10"
-        # self._memory = []
-        # for i in range(len(input)):
-        #     self._memory.append(str.encode(input[i]))
+    @property
+    def input(self):
         return self._memory
 
 
@@ -47,7 +44,7 @@ class LedDevice():
     def __init__(self):
         self._rgb = []
 
-    def set_RGB(self, rgb):
+    def set_rgb(self, rgb):
         for rgb in rgb:
             self._rgb.append(int.from_bytes(rgb, byteorder='little'))
 
