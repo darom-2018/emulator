@@ -2,30 +2,38 @@
 
 class InputDevice():
     def __init__(self):
-        self.memory =  bytearray()
+        self._memory = bytearray()
 
-    def setInput(self, data):
+    def set_input(self, data):
         for i in range(len(data)):
-            self.memory.extend(str.encode(data[i]))
+            self._memory.extend(str.encode(data[i]))
 
-    def getInput(self):
-        return self.memory
+    @property
+    def input(self):
+        return self._memory
 
 
-class outputDevice():
+class OutputDevice():
     def __init__(self):
-        self.output = ""
+        self._output = ""
 
-    def getOutput(self, data):
+    def set_output(self, data):
         for i in range(len(data)):
-            self.output += data[i].to_bytes(1, byteorder='little' )
-        return self.output
+            self._output += data[i].to_bytes(1, byteorder='little')
 
-class ledDevice():
+    @property
+    def output(self):
+        return self._output
+
+
+class LedDevice():
     def __init__(self):
-        self.rgb = []
+        self._rgb = []
 
-    def getRgb(self, rgb):
+    def set_rgb(self, rgb):
         for rgb in rgb:
-            self.rgb.append(int.from_bytes(rgb,  byteorder='little'))
-        return self.rgb
+            self._rgb.append(int.from_bytes(rgb, byteorder='little'))
+
+    @property
+    def rgb(self):
+        return self._rgb
