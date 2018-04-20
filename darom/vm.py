@@ -99,13 +99,14 @@ class VM:
     def stack_pop(self):
         allocation = self.memory
         self.cpu.sp -= constants.WORD_SIZE
-        head = self.rm.memory.read_word(allocation, self.cpu.sp)
+        head = self.rm.memory.read_virtual_word(allocation, self.cpu.sp)
         return head
 
     def stack_push(self, word):
         allocation = self.memory
         try:
-            head = self.rm.memory.write_word(allocation, self.cpu.sp, word)
+            head = self.rm.memory.write_virtual_word(
+                allocation, self.cpu.sp, word)
         except exceptions.PagingError:
             self._rm.cpu.pi = 4
         self.cpu.sp += constants.WORD_SIZE

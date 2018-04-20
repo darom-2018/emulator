@@ -42,9 +42,9 @@ class DUP(instruction.Instruction):
 
     def execute(self, vm):
         allocation = vm.rm.get_memory_allocation_for_vm(vm)
-        head = vm.rm.memory.read_word(allocation, vm.cpu.sp)
+        head = vm.rm.memory.read_virtual_word(allocation, vm.cpu.sp)
         vm.cpu.sp += constants.WORD_SIZE
-        vm.rm.memory.write_word(allocation, vm.cpu.sp, head)
+        vm.rm.memory.write_virtual_word(allocation, vm.cpu.sp, head)
 
 
 class POP(instruction.Instruction):
@@ -69,7 +69,7 @@ class POPM(instruction.Instruction):
         block = int.from_bytes(vm.stack_pop(), byteorder='little')
         head = vm.stack_pop()
 
-        vm.rm.memory.write_word(
+        vm.rm.memory.write_virtual_word(
             vm.memory, to_byte_address(
                 vm, block, word), head)
 
@@ -90,7 +90,7 @@ class PUSHM(instruction.Instruction):
         word = int.from_bytes(vm.stack_pop(), byteorder='little')
         block = int.from_bytes(vm.stack_pop(), byteorder='little')
 
-        word = vm.rm.memory.read_word(
+        word = vm.rm.memory.read_virtual_word(
             vm.memory, to_byte_address(
                 vm, block, word))
         vm.stack_push(word)

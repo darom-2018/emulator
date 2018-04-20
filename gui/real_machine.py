@@ -52,11 +52,14 @@ class ProcessorFrame:
             label.grid(row=1, column=column)
             column += 1
             if register == Registers.PTR.value:
-                entry = tkinter.Entry(self.frame, width=8)
+                entry = tkinter.Entry(
+                    self.frame, width=8, font=('Consolas', 9))
             elif register < Registers.MODE.value:
-                entry = tkinter.Entry(self.frame, width=4)
+                entry = tkinter.Entry(
+                    self.frame, width=4, font=('Consolas', 9))
             else:
-                entry = tkinter.Entry(self.frame, width=2)
+                entry = tkinter.Entry(
+                    self.frame, width=2, font=('Consolas', 9))
             self.registers.append(entry)
             entry.grid(row=1, column=column)
 
@@ -71,7 +74,9 @@ class MemoryFrame:
 
         for row in range(self.rows):
             for column in range(self.columns):
-                entry = tkinter.Entry(self.frame, width=4)
+                entry = tkinter.Entry(
+                    self.frame, width=4, font=(
+                        'Consolas', 9))
                 self.cells.append(entry)
                 entry.grid(row=row, column=column)
 
@@ -142,15 +147,30 @@ class MachineFrame:
     def modify(self):
         self.set_registers()
         self.set_memory()
+        self.update()
 
     def set_registers(self):
-        pass
+        if self.rm.current_vm:
+            self.rm.current_vm.cpu.pc = int(
+                self.processor_frame.registers[Registers.PC.value].get(), 16)
+            self.rm.current_vm.cpu.sp = int(
+                self.processor_frame.registers[Registers.SP.value].get(), 16)
+            self.rm.current_vm.cpu.set_flags(struct.pack('<H', int(
+                self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
+        self.rm.cpu.ptr = int(
+            self.processor_frame.registers[Registers.PTR.value].get(), 16)
+        self.rm.cpu.shm = int(
+            self.processor_frame.registers[Registers.SHM.value].get(), 16)
+        self.rm.cpu.mode = int(
+            self.processor_frame.registers[Registers.MODE.value].get(), 16)
+        self.rm.cpu.si = int(
+            self.processor_frame.registers[Registers.SI.value].get(), 16)
+        self.rm.cpu.pi = int(
+            self.processor_frame.registers[Registers.PI.value].get(), 16)
+        self.rm.cpu.ti = int(
+            self.processor_frame.registers[Registers.TI.value].get(), 16)
 
     def set_memory(self):
-        memory = []
         for i in range(len(self.memory_frame.cells)):
-            word = self.memory_frame.cells[i].get()
-            memory.append(word[:len(word) // 2])
-            memory.append(word[len(word) // 2:])
-        for i in range(len(memory)):
-            self.rm.set_memory(i, struct.pack('<B', int(memory[i], 16)))
+            self.rm.memory.write_word(
+                i * 2, struct.pack('<H', int(self.memory_frame.cells[i].get(), 16)))

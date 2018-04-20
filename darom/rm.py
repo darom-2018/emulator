@@ -157,9 +157,6 @@ class RM:
     def memory(self):
         return self._memory
 
-    def set_memory(self, cell, value):
-        self._memory.set_cell(cell, value)
-
     @property
     def current_vm(self):
         return self._current_vm
@@ -215,10 +212,10 @@ class RM:
         ss = cs + code_size
 
         for i in range(data_size):
-            self.memory.write_byte(allocation, i, bytes([data_bytes[i]]))
+            self.memory.write_virtual_byte(allocation, i, bytes([data_bytes[i]]))
         for i in range(code_size):
             address = i + data_size
-            self.memory.write_byte(allocation, address, bytes([code_bytes[i]]))
+            self.memory.write_virtual_byte(allocation, address, bytes([code_bytes[i]]))
 
         vm = VM(program, self)
 
@@ -293,14 +290,14 @@ class RM:
             # self._dump_registers()
             # pdb.set_trace()
             try:
-                instruction = self.memory.read_byte(
+                instruction = self.memory.read_virtual_byte(
                     allocation, self._current_vm.cpu.pc)
                 self._current_vm.cpu.pc += 1
                 instruction = self._cpu.instruction_set.find_by_code(
                     instruction)()
                 print(instruction.mnemonic)
                 if instruction.takes_arg:
-                    instruction.arg = self.memory.read_word(
+                    instruction.arg = self.memory.read_virtual_word(
                         allocation, self._current_vm.cpu.pc)
                     self._current_vm.cpu.pc += constants.WORD_SIZE
                 instruction.execute(self._current_vm)

@@ -45,7 +45,7 @@ class ProcessorFrame:
                     Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
-            entry = tkinter.Entry(self.frame, width=4)
+            entry = tkinter.Entry(self.frame, width=4, font=('Consolas', 9))
             self.registers.append(entry)
             entry.grid(row=1, column=column)
 
@@ -60,7 +60,9 @@ class MemoryFrame:
 
         for row in range(self.rows):
             for column in range(self.columns):
-                entry = tkinter.Entry(self.frame, width=4)
+                entry = tkinter.Entry(
+                    self.frame, width=4, font=(
+                        'Consolas', 9))
                 self.cells.append(entry)
                 entry.grid(row=row, column=column)
 
@@ -189,7 +191,7 @@ class MachineFrame:
         for i in range(0,
                        memory_allocation.block_count * constants.BLOCK_SIZE,
                        constants.WORD_SIZE):
-            word = self.vm.rm.memory.read_word(memory_allocation, i)
+            word = self.vm.rm.memory.read_virtual_word(memory_allocation, i)
             memory.append(word)
 
         for i in range(len(memory)):
@@ -199,15 +201,10 @@ class MachineFrame:
     def modify(self):
         self.set_registers()
         self.set_memory()
+        self.update()
 
     def set_registers(self):
         pass
 
     def set_memory(self):
-        memory = []
-        for i in range(len(self.memory_frame.cells)):
-            word = self.memory_frame.cells[i].get()
-            memory.append(word[:len(word) // 2])
-            memory.append(word[len(word) // 2:])
-        for i in range(len(memory)):
-            pass
+        pass
