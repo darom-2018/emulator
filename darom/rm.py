@@ -69,15 +69,12 @@ class HLP:
     def __init__(self):
         self._vpu = None
 
-        self.ptr = 0
-        self.pc = 0
-        self.sp = 0
-        self.shm = 0
-        self.flags = bytearray(2)
-        self.mode = 0
-        self.si = 0
-        self.pi = 0
-        self.ti = 99
+        self._ptr = 0
+        self._shm = 0
+        self._mode = 0
+        self._si = 0
+        self._pi = 0
+        self._ti = 100
 
         self._instruction_set = _DaromInstructionSet()
 
@@ -86,12 +83,28 @@ class HLP:
         return self._instruction_set
 
     @property
-    def pi(self):
-        return self._pi
+    def ptr(self):
+        return self._ptr
 
-    @pi.setter
-    def pi(self, value):
-        self._pi = value
+    @ptr.setter
+    def ptr(self, value):
+        self._ptr = value
+
+    @property
+    def shm(self):
+        return self._shm
+
+    @shm.setter
+    def shm(self, value):
+        self._shm = value
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        self._mode = value
 
     @property
     def si(self):
@@ -100,6 +113,14 @@ class HLP:
     @si.setter
     def si(self, value):
         self._si = value
+
+    @property
+    def pi(self):
+        return self._pi
+
+    @pi.setter
+    def pi(self, value):
+        self._pi = value
 
     @property
     def ti(self):
@@ -112,7 +133,7 @@ class HLP:
     def reset_registers(self):
         self._si = 0
         self._pi = 0
-        self._ti = 99
+        self._ti = 100
 
 
 class RM:
@@ -122,6 +143,7 @@ class RM:
         self._shared_memory = self._memory.allocate(2)
         self._semaphore = Semaphore(1)
         self._vms = []
+        self._current_vm = None
         self._channel_device = ChannelDevice(self)
         self._input_device = InputDevice()
         self._output_device = OutputDevice()
@@ -134,6 +156,13 @@ class RM:
     @property
     def memory(self):
         return self._memory
+
+    def set_memory(self, cell, value):
+        self._memory.set_cell(cell, value)
+
+    @property
+    def current_vm(self):
+        return self._current_vm
 
     @property
     def vm_count(self):
@@ -208,13 +237,13 @@ class RM:
             '\tPI: {}\n'
             '\tSI: {}\n'
             '\tTI: {}\n'.format(
-                self._vm.cpu.pc,
-                self._vm.cpu.sp,
-                self._vm.cpu.ds,
-                self._vm.cpu.flags,
-                self._cpu._pi,
-                self._cpu._si,
-                self._cpu._ti
+                self._current_vm.cpu.pc,
+                self._current_vm.cpu.sp,
+                self._current_vm.cpu.ds,
+                self._current_vm.cpu.flags,
+                self._cpu.pi,
+                self._cpu.si,
+                self._cpu.ti
             )
         )
 
@@ -240,24 +269,24 @@ class RM:
             interrupt_handlers.instr_led
         ]
 
-        if (self._cpu._pi) > 0:
-            pi_handlers[self._cpu._pi](self)
-            self._cpu._pi = 0
-        if (self._cpu._si) > 0:
+        if (self._cpu.pi) > 0:
+            pi_handlers[self._cpu.pi](self)
+            self._cpu.pi = 0
+        if (self._cpu.si) > 0:
             self._dump_registers()
-            si_handlers[self._cpu._si](self)
-            self._cpu._si = 0
-        if self._cpu._ti <= 0:
+            si_handlers[self._cpu.si](self)
+            self._cpu.si = 0
+        if self._cpu.ti <= 0:
             interrupt_handlers.timeout(self)
 
     def run(self, vm_id):
-        self._vm, _ = self._vms[vm_id]
-        while self._vm.running:
+        self._current_vm, _ = self._vms[vm_id]
+        while self._current_vm.running:
             self.step(vm_id)
 
     def step(self, vm_id):
-        self._vm, allocation = self._vms[vm_id]
-        if self._vm.running:
+        self._current_vm, allocation = self._vms[vm_id]
+        if self._current_vm.running:
             # print('Memory dump:')
             # self.memory._dump(allocation)
             # print('Register dump:')
@@ -265,22 +294,22 @@ class RM:
             # pdb.set_trace()
             try:
                 instruction = self.memory.read_byte(
-                    allocation, self._vm.cpu.pc)
-                self._vm.cpu.pc += 1
+                    allocation, self._current_vm.cpu.pc)
+                self._current_vm.cpu.pc += 1
                 instruction = self._cpu.instruction_set.find_by_code(
                     instruction)()
                 print(instruction.mnemonic)
                 if instruction.takes_arg:
                     instruction.arg = self.memory.read_word(
-                        allocation, self._vm.cpu.pc)
-                    self._vm.cpu.pc += constants.WORD_SIZE
-                instruction.execute(self._vm)
+                        allocation, self._current_vm.cpu.pc)
+                    self._current_vm.cpu.pc += constants.WORD_SIZE
+                instruction.execute(self._current_vm)
                 if isinstance(instruction, IOInstruction):
-                    self._cpu._ti -= 3
+                    self._cpu.ti -= 3
                 else:
-                    self._cpu._ti -= 1
+                    self._cpu.ti -= 1
             except exceptions.UnknownCommandCode as e:
-                self._cpu._pi = 1
+                self._cpu.pi = 1
             except exceptions.PagingError as e:
-                self._cpu._pi = 3
+                self._cpu.pi = 3
             self.test()

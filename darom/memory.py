@@ -32,9 +32,9 @@ class Allocation:
 
     def translate(self, block):
         if block not in range(self._block_count):
-            raise exceptions.PagingError('Accessing block {} when {} were allocated'.format(
-                block, self._block_count)
-            )
+            raise exceptions.PagingError(
+                'Accessing block {} when {} were allocated'.format(
+                    block, self._block_count))
         return self._translation_table[block]
 
 
@@ -51,6 +51,10 @@ class Memory:
         ]
 
     @property
+    def block_count(self):
+        return self._block_count
+
+    @property
     def block_size(self):
         return self._block_size
 
@@ -58,6 +62,13 @@ class Memory:
     def data(self):
         # Flatten the matrix that represents the memory
         return [cell for block in self._data for cell in block]
+
+    def set_cell(self, cell, value):
+        self._data[cell //
+                   (self._block_size *
+                    constants.WORD_SIZE)][cell %
+                                          (self._block_size *
+                                           constants.WORD_SIZE)] = value
 
     def allocate(self, block_count):
         available_blocks = []

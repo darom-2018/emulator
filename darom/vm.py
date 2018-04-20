@@ -21,21 +21,53 @@ from . import exceptions
 
 class CPU:
     def __init__(self):
-        self.pc = 0
-        self.sp = 0
-        self.ds = 0
-        self.flags = bytearray(2)
+        self._pc = 0
+        self._sp = 0
+        self._ds = 0
+        self._flags = bytearray(2)
         self._halted = False
 
     @property
+    def pc(self):
+        return self._pc
+
+    @pc.setter
+    def pc(self, value):
+        self._pc = value
+
+    @property
+    def sp(self):
+        return self._sp
+
+    @sp.setter
+    def sp(self, value):
+        self._sp = value
+
+    @property
+    def ds(self):
+        return self._ds
+
+    @ds.setter
+    def ds(self, value):
+        self._ds = value
+
+    @property
+    def flags(self):
+        return int.from_bytes(self._flags, byteorder='little')
+
+    def set_flags(self, value):
+        self._flags[0] = value[0]
+        self._flags[1] = value[1]
+
+    def test_flags(self):
+        return self._flags[0], self._flags[1] & 0x10, self._flags[1] & 1
+
+    @property
     def halted(self):
-            return self._halted
+        return self._halted
 
     def halt(self):
         self._halted = True
-
-    def test_flags(self):
-        return self.flags[0], self.flags[1] & 0x10, self.flags[1] & 1
 
 
 class VM:

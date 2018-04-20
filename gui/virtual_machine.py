@@ -19,16 +19,18 @@
 import enum
 import tkinter
 from tkinter import scrolledtext
+import struct
 from darom import constants
 
 
-class ProcessorFrame:
-    class Registers(enum.Enum):
-        PC = enum.auto()
-        SP = enum.auto()
-        DS = enum.auto()
-        FLAGS = enum.auto()
+class Registers(enum.Enum):
+    PC = 0
+    SP = 1
+    DS = 2
+    FLAGS = 3
 
+
+class ProcessorFrame:
     def __init__(self, window):
         self.frame = tkinter.LabelFrame(
             window, text='Processor', padx=5, pady=5, height=10)
@@ -36,11 +38,11 @@ class ProcessorFrame:
         self.registers = []
 
         column = 0
-        for register in range(1, len(self.Registers) + 1):
+        for register in range(len(Registers)):
             column += 1
             label = tkinter.Label(
                 self.frame, text='{}:'.format(
-                    self.Registers(register).name))
+                    Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
             entry = tkinter.Entry(self.frame, width=4)
@@ -172,14 +174,14 @@ class MachineFrame:
         for register in self.processor_frame.registers:
             register.delete(0, 'end')
 
-        self.processor_frame.registers[0].insert(0, self.vm.cpu.pc)
-        self.processor_frame.registers[1].insert(0, self.vm.cpu.sp)
-        self.processor_frame.registers[2].insert(0, self.vm.cpu.ds)
-        self.processor_frame.registers[3].insert(0, self.vm.cpu.flags.hex())
-
-        self.vm.rm.cpu.pc = self.vm.cpu.pc
-        self.vm.rm.cpu.sp = self.vm.cpu.sp
-        self.vm.rm.cpu.flags = self.vm.cpu.flags
+        self.processor_frame.registers[Registers.PC.value].insert(
+            0, format(self.vm.cpu.pc, '04X'))
+        self.processor_frame.registers[Registers.SP.value].insert(
+            0, format(self.vm.cpu.sp, '04X'))
+        self.processor_frame.registers[Registers.DS.value].insert(
+            0, format(self.vm.cpu.ds, '04X'))
+        self.processor_frame.registers[Registers.FLAGS.value].insert(
+            0, format(self.vm.cpu.flags, '04X'))
 
     def update_memory(self):
         memory_allocation = self.vm.memory
@@ -202,5 +204,10 @@ class MachineFrame:
         pass
 
     def set_memory(self):
-        # struct.pack('<B', 5)
-        pass
+        memory = []
+        for i in range(len(self.memory_frame.cells)):
+            word = self.memory_frame.cells[i].get()
+            memory.append(word[:len(word) // 2])
+            memory.append(word[len(word) // 2:])
+        for i in range(len(memory)):
+            pass
