@@ -155,7 +155,8 @@ class MachineFrame:
         self.io_frame.output_label.config(state=tkinter.DISABLED)
 
     def step(self):
-        pass
+        self.rm.step(self.vm_id)
+        self.update()
 
     def run(self):
         self.rm.run(self.vm_id)
