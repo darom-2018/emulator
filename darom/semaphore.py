@@ -1,4 +1,4 @@
-# © 2018 Justinas Valatkevicius
+# © 2018 Justinas Valatkevičius
 
 # This file is part of Darom.
 
@@ -15,27 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
 
-import pdb
+class Semaphore():
+    def __init__(self, init_value):
+        self._value = init_value
 
+    @property
+    def value(self):
+        return self._value
 
-class ChannelDevice():
-    def __init__(self, rm):
-        self._rm = rm
+    def p(self):
+        if self._value > 0:
+            self._value -= 1
+            return True
+        else:
+            # print("Waiting for semaphore to unlock")
+            return False
 
-    def read_stdinput(self, convert_to_int=False):
-        device_input = self._rm.input_device.input
-        if convert_to_int:
-            string = ""
-            for byte in device_input:
-                string += byte.decode()
-            word = int(string).to_bytes(2, byteorder='little')
-            return word
-        return device_input
-
-    def write_stdoutput(self, data):
-        self._rm.output_device.set_output(data)
-
-    def write_led(self, rgb):
-        self._rm.led_device.set_rgb(rgb)
+    def v(self):
+        self._value += 1
