@@ -212,18 +212,20 @@ class RM:
         ss = cs + code_size
 
         for i in range(data_size):
-            self.memory.write_virtual_byte(allocation, i, bytes([data_bytes[i]]))
+            self.memory.write_virtual_byte(
+                allocation, i, bytes([data_bytes[i]]))
         for i in range(code_size):
             address = i + data_size
-            self.memory.write_virtual_byte(allocation, address, bytes([code_bytes[i]]))
+            self.memory.write_virtual_byte(
+                allocation, address, bytes([code_bytes[i]]))
 
-        vm = VM(program, self)
+        self._current_vm = VM(program, self)
 
-        vm.cpu.pc = cs
-        vm.cpu.sp = ss
-        vm.cpu.ds = ds
+        self._current_vm.cpu.pc = cs
+        self._current_vm.cpu.sp = ss
+        self._current_vm.cpu.ds = ds
 
-        self._vms.append((vm, allocation))
+        self._vms.append((self._current_vm, allocation))
 
     def _dump_registers(self):
         print(

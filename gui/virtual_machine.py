@@ -111,6 +111,7 @@ class ProgramFrame:
 class MachineFrame:
     def __init__(self, window, rm_gui, vm_id, vm, code):
         window = tkinter.Toplevel(window)
+        window.resizable(width=False, height=False)
 
         self.rm_gui = rm_gui
         self.vm_id = vm_id
