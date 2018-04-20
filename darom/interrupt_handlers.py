@@ -1,7 +1,7 @@
 from . import constants
 
 
-def Incorrect_instruction_code(rm):
+def incorrect_instruction_code(rm):
     print("INCORRECT_INSTRUCTION_CODE")
     rm._vm.cpu.halt()
 

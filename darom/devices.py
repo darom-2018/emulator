@@ -25,7 +25,8 @@ class InputDevice():
             self._memory.append(str.encode(data[i]))
 
     def get_input(self):
-        # input = "test"
+        # input = "10"
+        # self._memory = []
         # for i in range(len(input)):
         #     self._memory.append(str.encode(input[i]))
         return self._memory
