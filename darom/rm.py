@@ -241,14 +241,6 @@ class RM:
             interrupt_handlers.timeout(self)
 
     def run(self, vm_id):
-<<<<<<< HEAD
-        self._vm, allocation = self._vms[vm_id]
-        print('Running {}'.format(self._vm.program.name))
-        print('Memory dump:')
-        self.memory._dump(allocation)
-
-        while self._vm.running:
-=======
         self._vm, _ = self._vms[vm_id]
         while self._vm.running:
             self.step(vm_id)
@@ -258,7 +250,6 @@ class RM:
         if self._vm.running:
             # print('Memory dump:')
             # self.memory._dump(allocation)
->>>>>>> 0166d37e7d3403e1cab3b0b08a78e4161ab599ff
             # print('Register dump:')
             # self._dump_registers()
             # pdb.set_trace()
