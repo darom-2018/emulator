@@ -25,12 +25,13 @@ class OutputDevice():
 
         print(self._output)
 
+
 class LedDevice():
     def __init__(self):
         self._rgb = []
 
     def set_RGB(self, rgb):
         for rgb in rgb:
-            self._rgb.append(int.from_bytes(rgb,  byteorder='little'))
+            self._rgb.append(int.from_bytes(rgb, byteorder='little'))
 
         print(self._rgb)

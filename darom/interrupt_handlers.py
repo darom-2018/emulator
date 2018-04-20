@@ -1,5 +1,6 @@
 from . import constants
 
+
 def Incorrect_instruction_code(rm):
     print("INCORRECT_INSTRUCTION_CODE")
     rm._vm.cpu.halt()
@@ -34,15 +35,15 @@ def In(rm):
     address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
 
     data = rm.channel_device.read_stdinput()
-    print(data)
-
     for i, byte in enumerate(data):
         rm.memory.write_byte(rm._vm.memory, address + i, byte)
+
 
 def Ini(rm):
     print("INI")
     data = rm.channel_device.read_stdinput(convert_to_int=True)
     rm._vm.stack_push(data)
+
 
 def Out(rm):
     print("OUT")
@@ -61,6 +62,7 @@ def Outi(rm):
     print("OUTI")
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     rm.channel_device.write_stdoutput(str(word))
+
 
 def Shread(rm):
     print("SHREAD")
