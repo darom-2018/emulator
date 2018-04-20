@@ -1,4 +1,23 @@
+# © 2018 Justinas Valatkevičius
+
+# This file is part of Darom.
+
+# Darom is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Darom is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Darom.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from . import constants
+
 
 def incorrect_instruction_code(rm):
     print("INCORRECT_INSTRUCTION_CODE")
@@ -80,7 +99,7 @@ def instr_shwrite(rm):
 
     for i in range(word_count):
         word = rm.memory.read_word(rm._vm.memory, src_address + (i * constants.WORD_SIZE))
-        rm.memory.write_word(rm.shared_memory, shared_address + (i * constants.WORD_SIZE) , word)
+        rm.memory.write_word(rm.shared_memory, shared_address + (i * constants.WORD_SIZE), word)
 
 
 def instr_shlock(rm):
@@ -90,8 +109,10 @@ def instr_shlock(rm):
         print("WAITING FOR SHARED MEMORY TO UNLOCK")
         rm._vm.cpu.pc -= 1
 
+
 def instr_shunlock(rm):
     rm.semaphore.v()
+
 
 def instr_led(rm):
     B = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
