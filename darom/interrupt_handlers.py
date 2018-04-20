@@ -22,6 +22,7 @@ def Stack_overflow(rm):
 
 def Halt(rm):
     print("HALT")
+    rm._memory._dump(rm._vm.memory)
     rm._vm.cpu.halt()
 
 
@@ -32,25 +33,16 @@ def In(rm):
     character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
 
-    rm._channel_device.dc = constants.DST_MEMORY
-    rm._channel_device.address = address
-    rm._channel_device.byte_count = 4
-    rm._channel_device.buffer = [b't',b'e',b's',b't']
-    rm._channel_device.transfer_data()
+    data = rm.channel_device.read_stdinput()
+    print(data)
+
+    for i, byte in enumerate(data):
+        rm.memory.write_byte(rm._vm.memory, address + i, byte)
 
 def Ini(rm):
     print("INI")
-    block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
-
-    # rm._channel_device.dc = constants.DST_MEMORY
-    # rm._channel_device.addres = address
-    # rm._channel_device.byte_count = 4
-    # rm._channel_device.buffer = [b'4']
-    # rm._channel_device.transfer_data()
-
+    data = rm.channel_device.read_stdinput(convert_to_int=True)
+    rm._vm.stack_push(data)
 
 def Out(rm):
     print("OUT")
@@ -58,24 +50,17 @@ def Out(rm):
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
 
-    rm._channel_device.dc = constants.DST_STDOUT
-    string = bytes()
+    byte_string = bytes()
     for i in range(character_count):
         address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
-        string += rm.memory.read_byte(rm._vm.memory, address + i)
-    rm._channel_device.buffer = string
-    rm._channel_device.transfer_data()
+        byte_string += rm.memory.read_byte(rm._vm.memory, address + i)
+    rm.channel_device.write_stdoutput(byte_string.decode('ascii'))
 
 
 def Outi(rm):
     print("OUTI")
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    # string = bytes()
-    # for i in range(character_count):
-    #     address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
-    #     string += rm.memory.read_byte(rm._vm.memory, address + i)
-    print(word)
-
+    rm.channel_device.write_stdoutput(str(word))
 
 def Shread(rm):
     print("SHREAD")
@@ -95,13 +80,15 @@ def Shunlock(rm):
 
 def Led(rm):
     print("LED")
-    B = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    G = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    R = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    B = rm._vm.stack_pop()
+    G = rm._vm.stack_pop()
+    R = rm._vm.stack_pop()
 
-    rm._channel_device.dc = constants.DST_LED
-    rm._channel_device.buffer = [R, G, B]
-    rm._channel_device.transfer_data()
+    rm.channel_device.write_led([R, G, B])
+
+    # rm._channel_device.dc = constants.DST_LED
+    # rm._channel_device.buffer = [R, G, B]
+    # rm._channel_device.transfer_data()
 
 
 def Timeout(rm):
