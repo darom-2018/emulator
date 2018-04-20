@@ -22,6 +22,8 @@ from . import instructions
 from . import interrupt_handlers
 
 from .assembler import Assembler
+from .channel_device import ChannelDevice
+from .devices import InputDevice, OutputDevice, LedDevice
 from .instruction import Instruction, IOInstruction
 from .memory import Memory
 from .semaphore import Semaphore
@@ -120,6 +122,10 @@ class RM:
         self._shared_memory = self._memory.allocate(2)
         self._semaphore = Semaphore(1)
         self._vms = []
+        self._channel_device = ChannelDevice(self)
+        self._input_device = InputDevice()
+        self._output_device = OutputDevice()
+        self._led_device = LedDevice()
 
     @property
     def cpu(self):
@@ -144,6 +150,22 @@ class RM:
     @property
     def semaphore(self):
         return self._semaphore
+    
+    @property
+    def channel_device(self):
+        return self._channel_device
+
+    @property
+    def input_device(self):
+        return self._input_device
+
+    @property
+    def output_device(self):
+        return self._output_device
+
+    @property
+    def led_device(self):
+        return self._led_device
 
     def get_memory_allocation_for_vm(self, vm):
         for k, v in self._vms:

@@ -18,11 +18,11 @@
 
 class InputDevice():
     def __init__(self):
-        self._memory = bytearray()
+        self._memory = []
 
     def set_input(self, data):
         for i in range(len(data)):
-            self._memory.extend(str.encode(data[i]))
+            self._memory.append(str.encode(data[i]))
 
     @property
     def input(self):
@@ -35,11 +35,9 @@ class OutputDevice():
 
     def set_output(self, data):
         for i in range(len(data)):
-            self._output += data[i].to_bytes(1, byteorder='little')
+            self._output += data[i]
 
-    @property
-    def output(self):
-        return self._output
+        print(self._output)
 
 
 class LedDevice():
@@ -50,6 +48,4 @@ class LedDevice():
         for rgb in rgb:
             self._rgb.append(int.from_bytes(rgb, byteorder='little'))
 
-    @property
-    def rgb(self):
-        return self._rgb
+        print(self._rgb)
