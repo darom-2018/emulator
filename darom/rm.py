@@ -24,6 +24,7 @@ from . import interrupt_handlers
 from .assembler import Assembler
 from .instruction import Instruction, IOInstruction
 from .memory import Memory
+from .semaphore import Semaphore
 from .vm import VM
 
 import inspect
@@ -117,6 +118,7 @@ class RM:
         self._cpu = HLP()
         self._memory = Memory(66, constants.BLOCK_SIZE // constants.WORD_SIZE)
         self._shared_memory = self._memory.allocate(2)
+        self._semaphore = Semaphore(1)
         self._vms = []
 
     @property
@@ -134,6 +136,14 @@ class RM:
     @property
     def last_vm(self):
         return self._vms[-1][0]
+
+    @property
+    def shared_memory(self):
+        return self._shared_memory
+
+    @property
+    def semaphore(self):
+        return self._semaphore
 
     def get_memory_allocation_for_vm(self, vm):
         for k, v in self._vms:
@@ -210,10 +220,12 @@ class RM:
 
         if (self._cpu._pi) > 0:
             pi_handlers[self._cpu._pi](self)
-        elif (self._cpu._si) > 0:
+            self._cpu._pi = 0
+        if (self._cpu._si) > 0:
             self._dump_registers()
             si_handlers[self._cpu._si](self)
-        elif self._cpu._ti <= 0:
+            self._cpu._si = 0
+        if self._cpu._ti <= 0:
             interrupt_handlers.timeout(self)
 
     def run(self, vm_id):
@@ -235,6 +247,7 @@ class RM:
                 self._vm.cpu.pc += 1
                 instruction = self._cpu.instruction_set.find_by_code(
                     instruction)()
+                print(instruction.mnemonic)
                 if instruction.takes_arg:
                     instruction.arg = self.memory.read_word(
                         allocation, self._vm.cpu.pc)
