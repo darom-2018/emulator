@@ -150,7 +150,7 @@ class RM:
     @property
     def semaphore(self):
         return self._semaphore
-    
+
     @property
     def channel_device(self):
         return self._channel_device
