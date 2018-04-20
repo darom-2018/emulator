@@ -56,11 +56,8 @@ class POP(instruction.Instruction):
 
 
 def to_byte_address(vm, block, word):
-    return (
-        vm.cpu.ds
-        + (block * vm.rm.memory.block_size * constants.WORD_SIZE)
-        + (word * constants.WORD_SIZE)
-    )
+    return (vm.cpu.ds + (block * vm.rm.memory.block_size *
+                         constants.WORD_SIZE) + (word * constants.WORD_SIZE))
 
 
 class POPM(instruction.Instruction):
@@ -72,7 +69,9 @@ class POPM(instruction.Instruction):
         block = int.from_bytes(vm.stack_pop(), byteorder='little')
         head = vm.stack_pop()
 
-        vm.rm.memory.write_word(vm.memory, to_byte_address(vm, block, word), head)
+        vm.rm.memory.write_word(
+            vm.memory, to_byte_address(
+                vm, block, word), head)
 
 
 class PUSH(instruction.Instruction):
@@ -91,7 +90,9 @@ class PUSHM(instruction.Instruction):
         word = int.from_bytes(vm.stack_pop(), byteorder='little')
         block = int.from_bytes(vm.stack_pop(), byteorder='little')
 
-        word = vm.rm.memory.read_word(vm.memory, to_byte_address(vm, block, word))
+        word = vm.rm.memory.read_word(
+            vm.memory, to_byte_address(
+                vm, block, word))
         vm.stack_push(word)
 
 
@@ -304,7 +305,10 @@ class LOOP(instruction.Instruction):
         if not counter > 0:
             return
         counter -= 1
-        vm.stack_push(counter.to_bytes(constants.WORD_SIZE, byteorder='little'))
+        vm.stack_push(
+            counter.to_bytes(
+                constants.WORD_SIZE,
+                byteorder='little'))
         _jmp(self, vm, offset)
 
 
