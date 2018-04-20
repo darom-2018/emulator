@@ -1,3 +1,20 @@
+# © 2018 Justinas Valatkevicius
+
+# This file is part of Darom.
+
+# Darom is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Darom is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Darom.  If not, see <http://www.gnu.org/licenses/>.
+
 from . import constants
 
 import pdb
@@ -8,14 +25,14 @@ class ChannelDevice():
         self._rm = rm
 
     def read_stdinput(self, convert_to_int=False):
-        bytes = self._rm.input_device.get_input()
+        device_input = self._rm.input_device.get_input()
         if convert_to_int:
             string = ""
-            for byte in bytes:
+            for byte in device_input:
                 string += byte.decode()
             word = int(string).to_bytes(2, byteorder='little')
             return word
-        return bytes
+        return device_input
 
     def write_stdoutput(self, data):
         self._rm.output_device.set_output(data)
