@@ -214,4 +214,7 @@ class MachineFrame:
             self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
 
     def set_memory(self):
-        pass
+        for i in range(len(self.memory_frame.cells)):
+            if self.memory_frame.cells[i].get():
+                self.rm.memory.write_virtual_word(
+                    self.vm.memory, i * 2, struct.pack('>H', int(self.memory_frame.cells[i].get(), 16)))

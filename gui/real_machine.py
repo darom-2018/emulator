@@ -173,4 +173,4 @@ class MachineFrame:
     def set_memory(self):
         for i in range(len(self.memory_frame.cells)):
             self.rm.memory.write_word(
-                i * 2, struct.pack('<H', int(self.memory_frame.cells[i].get(), 16)))
+                i * 2, struct.pack('>H', int(self.memory_frame.cells[i].get(), 16)))

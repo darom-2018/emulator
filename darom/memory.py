@@ -71,7 +71,7 @@ class Memory:
                                            constants.WORD_SIZE)] = value
 
     def write_word(self, address, value):
-        word = (value[1:], value[:1])
+        word = (value[:1], value[1:])
         for i in range(constants.WORD_SIZE):
             self.write_byte(address + i, word[i])
 
