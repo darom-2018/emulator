@@ -83,8 +83,8 @@ def instr_shread(rm):
     shared_address = rm.memory.translate_address(shared_block, shared_word)
 
     for i in range(word_count):
-        word = rm.memory.read_word(rm.shared_memory, shared_address + i)
-        rm.memory.write_word(rm._vm.memory, dst_address + i, word)
+        word = rm.memory.read_word(rm.shared_memory, shared_address + (i * constants.WORD_SIZE))
+        rm.memory.write_word(rm._vm.memory, dst_address + (i * constants.WORD_SIZE), word)
 
 
 def instr_shwrite(rm):
