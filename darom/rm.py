@@ -22,6 +22,8 @@ from . import instructions
 from . import interrupt_handlers
 
 from .assembler import Assembler
+from .channel_device import ChannelDevice
+from .devices import InputDevice, OutputDevice, LedDevice
 from .instruction import Instruction, IOInstruction
 from .memory import Memory
 from .vm import VM
@@ -118,6 +120,10 @@ class RM:
         self._memory = Memory(66, constants.BLOCK_SIZE // constants.WORD_SIZE)
         self._shared_memory = self._memory.allocate(2)
         self._vms = []
+        self._channel_device = ChannelDevice(self)
+        self._input_device = InputDevice()
+        self._output_device = OutputDevice()
+        self._led_device = LedDevice()
 
     @property
     def cpu(self):
@@ -134,6 +140,22 @@ class RM:
     @property
     def last_vm(self):
         return self._vms[-1][0]
+
+    @property
+    def channel_device(self):
+        return self._channel_device
+
+    @property
+    def input_device(self):
+        return self._input_device
+
+    @property
+    def output_device(self):
+        return self._output_device
+
+    @property
+    def led_device(self):
+        return self._led_device
 
     def get_memory_allocation_for_vm(self, vm):
         for k, v in self._vms:
@@ -210,9 +232,11 @@ class RM:
 
         if (self._cpu._pi) > 0:
             pi_handlers[self._cpu._pi](self)
+            self._cpu._pi = 0
         elif (self._cpu._si) > 0:
             self._dump_registers()
             si_handlers[self._cpu._si](self)
+            self._cpu._si = 0
         elif self._cpu._ti <= 0:
             interrupt_handlers.timeout(self)
 
