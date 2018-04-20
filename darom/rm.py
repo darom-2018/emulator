@@ -76,7 +76,7 @@ class HLP:
         self.mode = 0
         self.si = 0
         self.pi = 0
-        self.ti = 100
+        self.ti = 99
 
         self._instruction_set = _DaromInstructionSet()
 
@@ -111,7 +111,7 @@ class HLP:
     def reset_registers(self):
         self._si = 0
         self._pi = 0
-        self._ti = 100
+        self._ti = 99
 
 
 class RM:
@@ -211,23 +211,23 @@ class RM:
     def test(self):
         pi_handlers = [
             None,
-            interrupt_handlers.Incorrect_instruction_code,
-            interrupt_handlers.Incorrect_operand,
-            interrupt_handlers.Paging_error,
-            interrupt_handlers.Stack_overflow
+            interrupt_handlers.incorrect_instruction_code,
+            interrupt_handlers.incorrect_operand,
+            interrupt_handlers.paging_error,
+            interrupt_handlers.stack_overflow
         ]
         si_handlers = [
             None,
-            interrupt_handlers.Halt,
-            interrupt_handlers.In,
-            interrupt_handlers.Ini,
-            interrupt_handlers.Out,
-            interrupt_handlers.Outi,
-            interrupt_handlers.Shread,
-            interrupt_handlers.Shwrite,
-            interrupt_handlers.Shlock,
-            interrupt_handlers.Shunlock,
-            interrupt_handlers.Led
+            interrupt_handlers.instr_halt,
+            interrupt_handlers.instr_in,
+            interrupt_handlers.instr_ini,
+            interrupt_handlers.instr_out,
+            interrupt_handlers.instr_outi,
+            interrupt_handlers.instr_shread,
+            interrupt_handlers.instr_shwrite,
+            interrupt_handlers.instr_shlock,
+            interrupt_handlers.instr_shunlock,
+            interrupt_handlers.instr_led
         ]
 
         if (self._cpu._pi) > 0:
@@ -238,15 +238,27 @@ class RM:
             si_handlers[self._cpu._si](self)
             self._cpu._si = 0
         elif self._cpu._ti <= 0:
-            interrupt_handlers.Timeout(self)
+            interrupt_handlers.timeout(self)
 
     def run(self, vm_id):
+<<<<<<< HEAD
         self._vm, allocation = self._vms[vm_id]
         print('Running {}'.format(self._vm.program.name))
         print('Memory dump:')
         self.memory._dump(allocation)
 
         while self._vm.running:
+=======
+        self._vm, _ = self._vms[vm_id]
+        while self._vm.running:
+            self.step(vm_id)
+
+    def step(self, vm_id):
+        self._vm, allocation = self._vms[vm_id]
+        if self._vm.running:
+            # print('Memory dump:')
+            # self.memory._dump(allocation)
+>>>>>>> 0166d37e7d3403e1cab3b0b08a78e4161ab599ff
             # print('Register dump:')
             # self._dump_registers()
             # pdb.set_trace()

@@ -6,28 +6,28 @@ def Incorrect_instruction_code(rm):
     rm._vm.cpu.halt()
 
 
-def Incorrect_operand(rm):
+def incorrect_operand(rm):
     print("INCORRECT_OPERAND")
     rm._vm.cpu.halt()
 
 
-def Paging_error(rm):
+def paging_error(rm):
     print("PAGING_ERROR")
     rm._vm.cpu.halt()
 
 
-def Stack_overflow(rm):
+def stack_overflow(rm):
     print("STACK_OVERFLOW")
     rm._vm.cpu.halt()
 
 
-def Halt(rm):
+def instr_halt(rm):
     print("HALT")
     rm._memory._dump(rm._vm.memory)
     rm._vm.cpu.halt()
 
 
-def In(rm):
+def instr_in(rm):
     print("IN")
     block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
@@ -39,13 +39,13 @@ def In(rm):
         rm.memory.write_byte(rm._vm.memory, address + i, byte)
 
 
-def Ini(rm):
+def instr_ini(rm):
     print("INI")
     data = rm.channel_device.read_stdinput(convert_to_int=True)
     rm._vm.stack_push(data)
 
 
-def Out(rm):
+def instr_out(rm):
     print("OUT")
     block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
@@ -58,29 +58,29 @@ def Out(rm):
     rm.channel_device.write_stdoutput(byte_string.decode('ascii'))
 
 
-def Outi(rm):
+def instr_outi(rm):
     print("OUTI")
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     rm.channel_device.write_stdoutput(str(word))
 
 
-def Shread(rm):
+def instr_shread(rm):
     print("SHREAD")
 
 
-def Shwrite(rm):
+def instr_shwrite(rm):
     print("SHWRITE")
 
 
-def Shlock(rm):
+def instr_shlock(rm):
     print("SHLOCK")
 
 
-def Shunlock(rm):
+def instr_shunlock(rm):
     print("SHUNLOCK")
 
 
-def Led(rm):
+def instr_led(rm):
     print("LED")
     B = rm._vm.stack_pop()
     G = rm._vm.stack_pop()
@@ -93,6 +93,6 @@ def Led(rm):
     # rm._channel_device.transfer_data()
 
 
-def Timeout(rm):
+def timeout(rm):
     print("TIMEOUT")
     rm._vm.cpu.halt()
