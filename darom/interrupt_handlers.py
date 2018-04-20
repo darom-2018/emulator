@@ -1,43 +1,43 @@
-def Incorrect_instruction_code(rm):
+def incorrect_instruction_code(rm):
     print("INCORRECT_INSTRUCTION_CODE")
     rm._vm.cpu.halt()
 
 
-def Incorrect_operand(rm):
+def incorrect_operand(rm):
     print("INCORRECT_OPERAND")
     rm._vm.cpu.halt()
 
 
-def Paging_error(rm):
+def paging_error(rm):
     print("PAGING_ERROR")
     rm._vm.cpu.halt()
 
 
-def Stack_overflow(rm):
+def stack_overflow(rm):
     print("STACK_OVERFLOW")
     rm._vm.cpu.halt()
 
 
-def Halt(rm):
+def instr_halt(rm):
     print("HALT")
     rm._vm.cpu.halt()
 
 
-def In(rm):
+def instr_in(rm):
     print("IN")
     block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
 
 
-def Ini(rm):
+def instr_ini(rm):
     print("INI")
     block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
 
 
-def Out(rm):
+def instr_out(rm):
     print("OUT")
     block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
@@ -49,7 +49,7 @@ def Out(rm):
     print(string.decode('ascii'))
 
 
-def Outi(rm):
+def instr_outi(rm):
     print("OUTI")
     word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     # string = bytes()
@@ -59,23 +59,23 @@ def Outi(rm):
     print(word)
 
 
-def Shread(rm):
+def instr_shread(rm):
     print("SHREAD")
 
 
-def Shwrite(rm):
+def instr_shwrite(rm):
     print("SHWRITE")
 
 
-def Shlock(rm):
+def instr_shlock(rm):
     print("SHLOCK")
 
 
-def Shunlock(rm):
+def instr_shunlock(rm):
     print("SHUNLOCK")
 
 
-def Led(rm):
+def instr_led(rm):
     print("LED")
     B = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
     G = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
@@ -83,6 +83,6 @@ def Led(rm):
     print(R, G, B)
 
 
-def Timeout(rm):
+def timeout(rm):
     print("TIMEOUT")
     rm._vm.cpu.halt()
