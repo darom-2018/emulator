@@ -64,7 +64,6 @@ def main():
             rm.run(i)
     else:
         window = tkinter.Tk()
-        window.resizable(width=False, height=False)
         window.title('Emulator')
 
         real_machine_gui = rm_gui.MachineFrame(window, rm)
