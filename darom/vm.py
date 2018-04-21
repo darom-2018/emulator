@@ -55,7 +55,8 @@ class CPU:
     def flags(self):
         return int.from_bytes(self._flags, byteorder='little')
 
-    def set_flags(self, value):
+    @flags.setter
+    def flags(self, value):
         self._flags[0] = value[0]
         self._flags[1] = value[1]
 

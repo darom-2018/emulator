@@ -211,7 +211,7 @@ class MachineFrame:
             self.processor_frame.registers[Registers.SP.value].get(), 16)
         self.vm.cpu.ds = int(
             self.processor_frame.registers[Registers.DS.value].get(), 16)
-        self.vm.cpu.set_flags(struct.pack('<H', int(
+        self.vm.cpu.flags = (struct.pack('<H', int(
             self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
 
     def set_memory(self):

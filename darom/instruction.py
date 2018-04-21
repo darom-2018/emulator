@@ -84,7 +84,7 @@ class BinaryOperation(Instruction):
             # This is intentional, as the result can overflow
             zf = result == 0
 
-            vm.cpu.set_flags(((cf & 1), ((pf & 1) << 4) | (zf & 1)))
+            vm.cpu.flags = ((cf & 1), ((pf & 1) << 4) | (zf & 1))
 
             vm.stack_push(
                 result.to_bytes(

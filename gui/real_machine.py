@@ -155,7 +155,7 @@ class MachineFrame:
                 self.processor_frame.registers[Registers.PC.value].get(), 16)
             self.rm.current_vm.cpu.sp = int(
                 self.processor_frame.registers[Registers.SP.value].get(), 16)
-            self.rm.current_vm.cpu.set_flags(struct.pack('<H', int(
+            self.rm.current_vm.cpu.flags = (struct.pack('<H', int(
                 self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
         self.rm.cpu.ptr = int(
             self.processor_frame.registers[Registers.PTR.value].get(), 16)
