@@ -18,20 +18,23 @@
 
 import enum
 import tkinter
+import struct
 from darom import constants
 
 
+class Registers(enum.Enum):
+    PC = 0
+    SP = 1
+    FLAGS = 2
+    PTR = 3
+    SHM = 4
+    MODE = 5
+    SI = 6
+    PI = 7
+    TI = 8
+
+
 class ProcessorFrame:
-    class Registers(enum.Enum):
-        PTR = enum.auto()
-        PC = enum.auto()
-        SP = enum.auto()
-        SHM = enum.auto()
-        FLAGS = enum.auto()
-        MODE = enum.auto()
-        SI = enum.auto()
-        PI = enum.auto()
-        TI = enum.auto()
 
     def __init__(self, window):
         self.registers = []
@@ -41,19 +44,22 @@ class ProcessorFrame:
         self.frame.pack(side='top')
 
         column = 0
-        for register in range(1, len(self.Registers) + 1):
+        for register in range(len(Registers)):
             column += 1
             label = tkinter.Label(
                 self.frame, text='{}:'.format(
-                    self.Registers(register).name))
+                    Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
-            if register == self.Registers.PTR.value:
-                entry = tkinter.Entry(self.frame, width=8)
-            elif register < self.Registers.MODE.value:
-                entry = tkinter.Entry(self.frame, width=4)
+            if register == Registers.PTR.value:
+                entry = tkinter.Entry(
+                    self.frame, width=8, font=('Consolas', 9))
+            elif register < Registers.MODE.value:
+                entry = tkinter.Entry(
+                    self.frame, width=4, font=('Consolas', 9))
             else:
-                entry = tkinter.Entry(self.frame, width=2)
+                entry = tkinter.Entry(
+                    self.frame, width=2, font=('Consolas', 9))
             self.registers.append(entry)
             entry.grid(row=1, column=column)
 
@@ -68,7 +74,9 @@ class MemoryFrame:
 
         for row in range(self.rows):
             for column in range(self.columns):
-                entry = tkinter.Entry(self.frame, width=4)
+                entry = tkinter.Entry(
+                    self.frame, width=4, font=(
+                        'Consolas', 9))
                 self.cells.append(entry)
                 entry.grid(row=row, column=column)
 
@@ -97,15 +105,33 @@ class MachineFrame:
         for register in self.processor_frame.registers:
             register.delete(0, 'end')
 
-        self.processor_frame.registers[0].insert(0, self.rm.cpu.ptr)
-        self.processor_frame.registers[1].insert(0, self.rm.cpu.pc)
-        self.processor_frame.registers[2].insert(0, self.rm.cpu.sp)
-        self.processor_frame.registers[3].insert(0, self.rm.cpu.shm)
-        self.processor_frame.registers[4].insert(0, self.rm.cpu.flags.hex())
-        self.processor_frame.registers[5].insert(0, self.rm.cpu.mode)
-        self.processor_frame.registers[6].insert(0, self.rm.cpu.si)
-        self.processor_frame.registers[7].insert(0, self.rm.cpu.pi)
-        self.processor_frame.registers[8].insert(0, self.rm.cpu.ti)
+        if self.rm.current_vm:
+            self.processor_frame.registers[Registers.PC.value].insert(
+                0, format(self.rm.current_vm.cpu.pc, '04X'))
+            self.processor_frame.registers[Registers.SP.value].insert(
+                0, format(self.rm.current_vm.cpu.sp, '04X'))
+            self.processor_frame.registers[Registers.FLAGS.value].insert(
+                0, format(self.rm.current_vm.cpu.flags, '04X'))
+        else:
+            self.processor_frame.registers[Registers.PC.value].insert(
+                0, format(0, '04X'))
+            self.processor_frame.registers[Registers.SP.value].insert(
+                0, format(0, '04X'))
+            self.processor_frame.registers[Registers.FLAGS.value].insert(
+                0, format(0, '04X'))
+
+        self.processor_frame.registers[Registers.PTR.value].insert(
+            0, format(self.rm.cpu.ptr, '08X'))
+        self.processor_frame.registers[Registers.SHM.value].insert(
+            0, format(self.rm.cpu.shm, '04X'))
+        self.processor_frame.registers[Registers.MODE.value].insert(
+            0, format(self.rm.cpu.mode, '02X'))
+        self.processor_frame.registers[Registers.SI.value].insert(
+            0, format(self.rm.cpu.si, '02X'))
+        self.processor_frame.registers[Registers.PI.value].insert(
+            0, format(self.rm.cpu.pi, '02X'))
+        self.processor_frame.registers[Registers.TI.value].insert(
+            0, format(self.rm.cpu.ti, '02X'))
 
     def update_memory(self):
         memory = []
@@ -121,10 +147,30 @@ class MachineFrame:
     def modify(self):
         self.set_registers()
         self.set_memory()
+        self.update()
 
     def set_registers(self):
-        pass
+        if self.rm.current_vm:
+            self.rm.current_vm.cpu.pc = int(
+                self.processor_frame.registers[Registers.PC.value].get(), 16)
+            self.rm.current_vm.cpu.sp = int(
+                self.processor_frame.registers[Registers.SP.value].get(), 16)
+            self.rm.current_vm.cpu.set_flags(struct.pack('<H', int(
+                self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
+        self.rm.cpu.ptr = int(
+            self.processor_frame.registers[Registers.PTR.value].get(), 16)
+        self.rm.cpu.shm = int(
+            self.processor_frame.registers[Registers.SHM.value].get(), 16)
+        self.rm.cpu.mode = int(
+            self.processor_frame.registers[Registers.MODE.value].get(), 16)
+        self.rm.cpu.si = int(
+            self.processor_frame.registers[Registers.SI.value].get(), 16)
+        self.rm.cpu.pi = int(
+            self.processor_frame.registers[Registers.PI.value].get(), 16)
+        self.rm.cpu.ti = int(
+            self.processor_frame.registers[Registers.TI.value].get(), 16)
 
     def set_memory(self):
-        # struct.pack('<B', 5)
-        pass
+        for i in range(len(self.memory_frame.cells)):
+            self.rm.memory.write_word(
+                i * 2, struct.pack('>H', int(self.memory_frame.cells[i].get(), 16)))

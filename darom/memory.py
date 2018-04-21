@@ -32,9 +32,9 @@ class Allocation:
 
     def translate(self, block):
         if block not in range(self._block_count):
-            raise exceptions.PagingError('Accessing block {} when {} were allocated'.format(
-                block, self._block_count)
-            )
+            raise exceptions.PagingError(
+                'Accessing block {} when {} were allocated'.format(
+                    block, self._block_count))
         return self._translation_table[block]
 
 
@@ -51,6 +51,10 @@ class Memory:
         ]
 
     @property
+    def block_count(self):
+        return self._block_count
+
+    @property
     def block_size(self):
         return self._block_size
 
@@ -58,6 +62,18 @@ class Memory:
     def data(self):
         # Flatten the matrix that represents the memory
         return [cell for block in self._data for cell in block]
+
+    def write_byte(self, address, value):
+        self._data[address //
+                   (self._block_size *
+                    constants.WORD_SIZE)][address %
+                                          (self._block_size *
+                                           constants.WORD_SIZE)] = value
+
+    def write_word(self, address, value):
+        word = (value[:1], value[1:])
+        for i in range(constants.WORD_SIZE):
+            self.write_byte(address + i, word[i])
 
     def allocate(self, block_count):
         available_blocks = []
@@ -99,18 +115,18 @@ class Memory:
             if v is allocation:
                 self._allocation_table[k] = None
 
-    def read_byte(self, allocation, address):
+    def read_virtual_byte(self, allocation, address):
         block = address // self._block_size // constants.WORD_SIZE
         translated_block = allocation.translate(block)
         byte = address % (self._block_size * constants.WORD_SIZE)
 
         return self._data[translated_block][byte]
 
-    def read_word(self, allocation, address):
+    def read_virtual_word(self, allocation, address):
         word = bytes()
 
         for i in range(constants.WORD_SIZE):
-            byte = self.read_byte(allocation, address + i)
+            byte = self.read_virtual_byte(allocation, address + i)
             word += byte
 
         return word
@@ -120,16 +136,16 @@ class Memory:
         address += word * constants.WORD_SIZE
         return address
 
-    def write_byte(self, allocation, address, data):
+    def write_virtual_byte(self, allocation, address, data):
         block = address // self._block_size // constants.WORD_SIZE
         translated_block = allocation.translate(block)
         byte = address % (self._block_size * constants.WORD_SIZE)
 
         self._data[translated_block][byte] = data
 
-    def write_word(self, allocation, address, data):
+    def write_virtual_word(self, allocation, address, data):
         for i in range(constants.WORD_SIZE):
-            self.write_byte(allocation, address + i, bytes([data[i]]))
+            self.write_virtual_byte(allocation, address + i, bytes([data[i]]))
 
     def _dump(self, allocation):
         for i in range(allocation.block_count):

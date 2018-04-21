@@ -20,90 +20,94 @@ from . import constants
 
 def incorrect_instruction_code(rm):
     print("INCORRECT_INSTRUCTION_CODE")
-    rm._vm.cpu.halt()
+    rm.current_vm.cpu.halt()
 
 
 def incorrect_operand(rm):
     print("INCORRECT_OPERAND")
-    rm._vm.cpu.halt()
+    rm.current_vm.cpu.halt()
 
 
 def paging_error(rm):
     print("PAGING_ERROR")
-    rm._vm.cpu.halt()
+    rm.current_vm.cpu.halt()
 
 
 def stack_overflow(rm):
     print("STACK_OVERFLOW")
-    rm._vm.cpu.halt()
+    rm.current_vm.cpu.halt()
 
 
 def instr_halt(rm):
-    rm._vm.cpu.halt()
+    rm.current_vm.cpu.halt()
     print("HALTED")
 
 
 def instr_in(rm):
-    block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
+    block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    character_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    address = rm.current_vm.cpu.ds + rm.memory.translate_address(block, word)
 
     data = rm.channel_device.read_stdinput()
     for i, byte in enumerate(data):
-        rm.memory.write_byte(rm._vm.memory, address + i, byte)
+        rm.memory.write_byte(rm.current_vm.memory, address + i, byte)
 
 
 def instr_ini(rm):
     data = rm.channel_device.read_stdinput(convert_to_int=True)
-    rm._vm.stack_push(data)
+    rm.current_vm.stack_push(data)
 
 
 def instr_out(rm):
-    block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    character_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    character_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
 
     byte_string = bytes()
     for i in range(character_count):
-        address = rm._vm.cpu.ds + rm.memory.translate_address(block, word)
-        byte_string += rm.memory.read_byte(rm._vm.memory, address + i)
+        address = rm.current_vm.cpu.ds + rm.memory.translate_address(block, word)
+        byte_string += rm.memory.read_byte(rm.current_vm.memory, address + i)
     rm.channel_device.write_stdoutput(byte_string.decode('ascii'))
 
 
 def instr_outi(rm):
-    word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     rm.channel_device.write_stdoutput(str(word))
 
 
 def instr_shread(rm):
-    word_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    dst_word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    dst_block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    shared_word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    shared_block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    word_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    dst_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    dst_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    shared_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    shared_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
 
     dst_address = rm.memory.translate_address(dst_block, dst_word)
     shared_address = rm.memory.translate_address(shared_block, shared_word)
 
     for i in range(word_count):
-        word = rm.memory.read_word(rm.shared_memory, shared_address + (i * constants.WORD_SIZE))
-        rm.memory.write_word(rm._vm.memory, dst_address + (i * constants.WORD_SIZE), word)
+        word = rm.memory.read_word(rm.shared_memory,
+                                   shared_address + (i * constants.WORD_SIZE))
+        rm.memory.write_word(rm.current_vm.memory, dst_address +
+                             (i * constants.WORD_SIZE), word)
 
 
 def instr_shwrite(rm):
-    word_count = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    src_word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    src_block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    shared_word = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
-    shared_block = int.from_bytes(rm._vm.stack_pop(), byteorder='little')
+    word_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    src_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    src_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    shared_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    shared_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
 
     src_address = rm.memory.translate_address(src_block, src_word)
     shared_address = rm.memory.translate_address(shared_block, shared_word)
 
     for i in range(word_count):
-        word = rm.memory.read_word(rm._vm.memory, src_address + (i * constants.WORD_SIZE))
-        rm.memory.write_word(rm.shared_memory, shared_address + (i * constants.WORD_SIZE), word)
+        word = rm.memory.read_word(rm.current_vm.memory,
+                                   src_address + (i * constants.WORD_SIZE))
+        rm.memory.write_word(
+            rm.shared_memory, shared_address + (i * constants.WORD_SIZE), word)
 
 
 def instr_shlock(rm):
@@ -111,7 +115,7 @@ def instr_shlock(rm):
         print("SHARED MEMORY LOCKED")
     else:
         print("WAITING FOR SHARED MEMORY TO UNLOCK")
-        rm._vm.cpu.pc -= 1
+        rm.current_vm.cpu.pc -= 1
 
 
 def instr_shunlock(rm):
@@ -119,13 +123,13 @@ def instr_shunlock(rm):
 
 
 def instr_led(rm):
-    B = rm._vm.stack_pop()
-    G = rm._vm.stack_pop()
-    R = rm._vm.stack_pop()
+    B = rm.current_vm.stack_pop()
+    G = rm.current_vm.stack_pop()
+    R = rm.current_vm.stack_pop()
 
     rm.channel_device.write_led([R, G, B])
 
 
 def timeout(rm):
     print("TIMEOUT")
-    rm._vm.cpu.halt()
+    rm.current_vm.cpu.halt()

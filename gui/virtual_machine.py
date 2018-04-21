@@ -19,16 +19,18 @@
 import enum
 import tkinter
 from tkinter import scrolledtext
+import struct
 from darom import constants
 
 
-class ProcessorFrame:
-    class Registers(enum.Enum):
-        PC = enum.auto()
-        SP = enum.auto()
-        DS = enum.auto()
-        FLAGS = enum.auto()
+class Registers(enum.Enum):
+    PC = 0
+    SP = 1
+    DS = 2
+    FLAGS = 3
 
+
+class ProcessorFrame:
     def __init__(self, window):
         self.frame = tkinter.LabelFrame(
             window, text='Processor', padx=5, pady=5, height=10)
@@ -36,14 +38,14 @@ class ProcessorFrame:
         self.registers = []
 
         column = 0
-        for register in range(1, len(self.Registers) + 1):
+        for register in range(len(Registers)):
             column += 1
             label = tkinter.Label(
                 self.frame, text='{}:'.format(
-                    self.Registers(register).name))
+                    Registers(register).name))
             label.grid(row=1, column=column)
             column += 1
-            entry = tkinter.Entry(self.frame, width=4)
+            entry = tkinter.Entry(self.frame, width=4, font=('Consolas', 9))
             self.registers.append(entry)
             entry.grid(row=1, column=column)
 
@@ -58,7 +60,9 @@ class MemoryFrame:
 
         for row in range(self.rows):
             for column in range(self.columns):
-                entry = tkinter.Entry(self.frame, width=4)
+                entry = tkinter.Entry(
+                    self.frame, width=4, font=(
+                        'Consolas', 9))
                 self.cells.append(entry)
                 entry.grid(row=row, column=column)
 
@@ -107,6 +111,7 @@ class ProgramFrame:
 class MachineFrame:
     def __init__(self, window, rm_gui, vm_id, vm, code):
         window = tkinter.Toplevel(window)
+        window.resizable(width=False, height=False)
 
         self.rm_gui = rm_gui
         self.vm_id = vm_id
@@ -172,14 +177,14 @@ class MachineFrame:
         for register in self.processor_frame.registers:
             register.delete(0, 'end')
 
-        self.processor_frame.registers[0].insert(0, self.vm.cpu.pc)
-        self.processor_frame.registers[1].insert(0, self.vm.cpu.sp)
-        self.processor_frame.registers[2].insert(0, self.vm.cpu.ds)
-        self.processor_frame.registers[3].insert(0, self.vm.cpu.flags.hex())
-
-        self.vm.rm.cpu.pc = self.vm.cpu.pc
-        self.vm.rm.cpu.sp = self.vm.cpu.sp
-        self.vm.rm.cpu.flags = self.vm.cpu.flags
+        self.processor_frame.registers[Registers.PC.value].insert(
+            0, format(self.vm.cpu.pc, '04X'))
+        self.processor_frame.registers[Registers.SP.value].insert(
+            0, format(self.vm.cpu.sp, '04X'))
+        self.processor_frame.registers[Registers.DS.value].insert(
+            0, format(self.vm.cpu.ds, '04X'))
+        self.processor_frame.registers[Registers.FLAGS.value].insert(
+            0, format(self.vm.cpu.flags, '04X'))
 
     def update_memory(self):
         memory_allocation = self.vm.memory
@@ -187,7 +192,7 @@ class MachineFrame:
         for i in range(0,
                        memory_allocation.block_count * constants.BLOCK_SIZE,
                        constants.WORD_SIZE):
-            word = self.vm.rm.memory.read_word(memory_allocation, i)
+            word = self.vm.rm.memory.read_virtual_word(memory_allocation, i)
             memory.append(word)
 
         for i in range(len(memory)):
@@ -197,10 +202,20 @@ class MachineFrame:
     def modify(self):
         self.set_registers()
         self.set_memory()
+        self.update()
 
     def set_registers(self):
-        pass
+        self.vm.cpu.pc = int(
+            self.processor_frame.registers[Registers.PC.value].get(), 16)
+        self.vm.cpu.sp = int(
+            self.processor_frame.registers[Registers.SP.value].get(), 16)
+        self.vm.cpu.ds = int(
+            self.processor_frame.registers[Registers.DS.value].get(), 16)
+        self.vm.cpu.set_flags(struct.pack('<H', int(
+            self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
 
     def set_memory(self):
-        # struct.pack('<B', 5)
-        pass
+        for i in range(len(self.memory_frame.cells)):
+            if self.memory_frame.cells[i].get():
+                self.rm.memory.write_virtual_word(
+                    self.vm.memory, i * 2, struct.pack('>H', int(self.memory_frame.cells[i].get(), 16)))
