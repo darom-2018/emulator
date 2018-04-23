@@ -18,6 +18,7 @@
 from . import constants
 from . import exceptions
 from . import instruction
+from . import util
 
 import operator
 import pdb
