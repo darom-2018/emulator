@@ -1,4 +1,4 @@
-# © 2018 Ernestas Kulik
+# © 2018 Ernestas Kulik, Justinas Valatkevičius, Tautvydas Baliukynas
 
 # This file is part of Darom.
 
@@ -20,6 +20,7 @@ from . import constants
 from . import exceptions
 from . import instructions
 from . import interrupt_handlers
+from . import util
 
 from .assembler import Assembler
 from .channel_device import ChannelDevice
@@ -44,16 +45,16 @@ class InstructionSet():
         }
 
     def find_by_mnemonic(self, mnemonic):
-        if mnemonic in self._mnemonic_dict:
-            return self._mnemonic_dict.get(mnemonic, None)
-        else:
-            raise exceptions.UnknownCommandMnemonic(mnemonic)
+        try:
+            return self._mnemonic_dict[mnemonic]
+        except KeyError:
+            raise exceptions.InvalidInstructionMnemonicError(mnemonic)
 
     def find_by_code(self, code):
-        if code in self._code_dict:
-            return self._code_dict.get(code, None)
-        else:
-            raise exceptions.UnknownCommandCode(code)
+        try:
+            return self._code_dict[code]
+        except KeyError:
+            raise exceptions.InvalidInstructionCodeError(code)
 
 
 class _DaromInstructionSet(InstructionSet):
@@ -67,14 +68,12 @@ class _DaromInstructionSet(InstructionSet):
 
 class HLP:
     def __init__(self):
-        self._vpu = None
-
-        self._ptr = 0
-        self._shm = 0
-        self._mode = 0
-        self._si = 0
-        self._pi = 0
-        self._ti = 100
+        self.ptr = bytearray(4)
+        self.shm = 0
+        self.mode = 0
+        self.si = 0
+        self.pi = 0
+        self.ti = 100
 
         self._instruction_set = _DaromInstructionSet()
 
@@ -82,65 +81,17 @@ class HLP:
     def instruction_set(self):
         return self._instruction_set
 
-    @property
-    def ptr(self):
-        return self._ptr
-
-    @ptr.setter
-    def ptr(self, value):
-        self._ptr = value
-
-    @property
-    def shm(self):
-        return self._shm
-
-    @shm.setter
-    def shm(self, value):
-        self._shm = value
-
-    @property
-    def mode(self):
-        return self._mode
-
-    @mode.setter
-    def mode(self, value):
-        self._mode = value
-
-    @property
-    def si(self):
-        return self._si
-
-    @si.setter
-    def si(self, value):
-        self._si = value
-
-    @property
-    def pi(self):
-        return self._pi
-
-    @pi.setter
-    def pi(self, value):
-        self._pi = value
-
-    @property
-    def ti(self):
-        return self._ti
-
-    @ti.setter
-    def ti(self, value):
-        self._ti = value
-
     def reset_registers(self):
-        self._si = 0
-        self._pi = 0
-        self._ti = 100
+        self.si = 0
+        self.pi = 0
+        self.ti = 100
 
 
 class RM:
     def __init__(self):
         self._cpu = HLP()
-        self._memory = Memory(66, constants.BLOCK_SIZE // constants.WORD_SIZE)
-        self._shared_memory = self._memory.allocate(2)
+        self._user_memory = Memory(70, self.cpu)
+        self._shared_memory = self._user_memory.allocate(2)
         self._semaphore = Semaphore(1)
         self._vms = []
         self._current_vm = None
@@ -155,7 +106,7 @@ class RM:
 
     @property
     def memory(self):
-        return self._memory
+        return self._user_memory
 
     @property
     def current_vm(self):
@@ -193,17 +144,29 @@ class RM:
     def led_device(self):
         return self._led_device
 
-    def get_memory_allocation_for_vm(self, vm):
-        for k, v in self._vms:
-            if k is vm:
-                return v
-
     def load(self, program):
         self.cpu.reset_registers()
-        data_size, code_size = program.size()
 
-        allocation = self.memory.allocate_bytes(
-            data_size + code_size + 2 * self.memory.block_size * constants.WORD_SIZE)
+        data_size, code_size = program.size()
+        page_count = util.to_page_count(data_size + code_size)
+
+        vm = VM(program, self)
+        ptr = bytearray(4)
+
+        ptr[0] = data_size + code_size
+        ptr[1] = page_count
+        ptr[2] = self.memory.allocate(1)[0]
+        ptr[3] = 0
+
+        self.cpu.ptr = ptr
+
+        vm_allocation = self.memory.allocate(page_count + 2)
+
+        for i in range(len(vm_allocation)):
+            word = vm_allocation[i].to_bytes(
+                constants.WORD_SIZE, byteorder=constants.BYTE_ORDER
+            )
+            self.memory.write_word(util.to_byte_address(self.cpu.ptr[2], i), word)
 
         data_bytes, code_bytes = program.as_bytes()
 
@@ -212,20 +175,15 @@ class RM:
         ss = cs + code_size
 
         for i in range(data_size):
-            self.memory.write_virtual_byte(
-                allocation, i, bytes([data_bytes[i]]))
+            self.memory.write_byte(i, data_bytes[i], virtual=True)
         for i in range(code_size):
-            address = i + data_size
-            self.memory.write_virtual_byte(
-                allocation, address, bytes([code_bytes[i]]))
+            self.memory.write_byte(i + data_size, code_bytes[i], virtual=True)
 
-        self._current_vm = VM(program, self)
+        vm.cpu.pc = cs
+        vm.cpu.sp = ss
+        vm.cpu.ds = ds
 
-        self._current_vm.cpu.pc = cs
-        self._current_vm.cpu.sp = ss
-        self._current_vm.cpu.ds = ds
-
-        self._vms.append((self._current_vm, allocation))
+        self._vms.append((vm, ptr))
 
     def _dump_registers(self):
         print(
@@ -233,6 +191,7 @@ class RM:
             '\tSP: {}\n'
             '\tDS: {}\n'
             '\tFLAGS: {}\n'
+            '\tPTR: {}\n'
             '\tPI: {}\n'
             '\tSI: {}\n'
             '\tTI: {}\n'.format(
@@ -240,6 +199,7 @@ class RM:
                 self._current_vm.cpu.sp,
                 self._current_vm.cpu.ds,
                 self._current_vm.cpu.flags,
+                self._cpu.ptr,
                 self._cpu.pi,
                 self._cpu.si,
                 self._cpu.ti
@@ -249,23 +209,23 @@ class RM:
     def test(self):
         pi_handlers = [
             None,
-            interrupt_handlers.incorrect_instruction_code,
-            interrupt_handlers.incorrect_operand,
-            interrupt_handlers.paging_error,
+            interrupt_handlers.invalid_instruction_code,
+            interrupt_handlers.invalid_operand,
+            interrupt_handlers.page_fault,
             interrupt_handlers.stack_overflow
         ]
         si_handlers = [
             None,
-            interrupt_handlers.instr_halt,
-            interrupt_handlers.instr_in,
-            interrupt_handlers.instr_ini,
-            interrupt_handlers.instr_out,
-            interrupt_handlers.instr_outi,
-            interrupt_handlers.instr_shread,
-            interrupt_handlers.instr_shwrite,
-            interrupt_handlers.instr_shlock,
-            interrupt_handlers.instr_shunlock,
-            interrupt_handlers.instr_led
+            interrupt_handlers.halt,
+            interrupt_handlers.in_,
+            interrupt_handlers.ini,
+            interrupt_handlers.out,
+            interrupt_handlers.outi,
+            interrupt_handlers.shread,
+            interrupt_handlers.shwrite,
+            interrupt_handlers.shlock,
+            interrupt_handlers.shunlock,
+            interrupt_handlers.led
         ]
 
         if (self._cpu.pi) > 0:
@@ -279,36 +239,44 @@ class RM:
             interrupt_handlers.timeout(self)
 
     def run(self, vm_id):
-        self._current_vm, _ = self._vms[vm_id]
+        self._current_vm, self.cpu.ptr = self._vms[vm_id]
+
         while self._current_vm.running:
             self.step(vm_id)
 
     def step(self, vm_id):
-        self._current_vm, allocation = self._vms[vm_id]
-        if self._current_vm.running:
-            # print('Memory dump:')
-            # self.memory._dump(allocation)
-            # print('Register dump:')
-            # self._dump_registers()
-            # pdb.set_trace()
-            try:
-                instruction = self.memory.read_virtual_byte(
-                    allocation, self._current_vm.cpu.pc)
-                self._current_vm.cpu.pc += 1
-                instruction = self._cpu.instruction_set.find_by_code(
-                    instruction)()
-                print(instruction.mnemonic)
-                if instruction.takes_arg:
-                    instruction.arg = self.memory.read_virtual_word(
-                        allocation, self._current_vm.cpu.pc)
-                    self._current_vm.cpu.pc += constants.WORD_SIZE
-                instruction.execute(self._current_vm)
-                if isinstance(instruction, IOInstruction):
-                    self._cpu.ti -= 3
-                else:
-                    self._cpu.ti -= 1
-            except exceptions.UnknownCommandCode as e:
-                self._cpu.pi = 1
-            except exceptions.PagingError as e:
-                self._cpu.pi = 3
-            self.test()
+        self._current_vm, self.cpu.ptr = self._vms[vm_id]
+
+        if not self._current_vm.running:
+            return
+
+        try:
+            instruction = self.memory.read_byte(
+                self._current_vm.cpu.pc,
+                virtual=True
+            )
+            instruction = instruction.to_bytes(1, byteorder=constants.BYTE_ORDER)
+
+            self._current_vm.cpu.pc += 1
+
+            instruction = self._cpu.instruction_set.find_by_code(instruction)()
+            if instruction.takes_arg:
+                instruction.arg = self.memory.read_word(
+                    self._current_vm.cpu.pc,
+                    virtual=True
+                )
+                self._current_vm.cpu.pc += constants.WORD_SIZE
+
+            instruction.execute(self._current_vm)
+
+            if isinstance(instruction, IOInstruction):
+                self._cpu.ti -= 3
+            else:
+                self._cpu.ti -= 1
+        except exceptions.InvalidInstructionCodeError:
+            self._cpu.pi = 1
+        except exceptions.PageFaultError:
+            print('dicks')
+            self._cpu.pi = 3
+
+        self.test()

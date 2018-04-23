@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
+BYTE_ORDER = 'little'
+# Page size in words
+PAGE_SIZE = 16
+# Word size in bytes
 WORD_SIZE = 2
+# Maximum value representable in a word
 WORD_MAX = (2 ** (8 * WORD_SIZE)) - 1
-BLOCK_SIZE = 16 * WORD_SIZE
 
 SRC_MEMORY = 1
 SRC_SUPER_MEMORY = 2

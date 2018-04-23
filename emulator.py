@@ -30,9 +30,10 @@ from tkinter import filedialog
 def start_virtual_machine(window, real_machine_gui, real_machine):
     virtual_machine_id = real_machine.vm_count
 
-    program_file = filedialog.askopenfile(
-        title='Choose a program to load...'
-    )
+    program_file = filedialog.askopenfile(title='Choose a program to load…')
+    if program_file is None:
+        return
+
     code = program_file.read()
     program_file.close()
     program_file = open(program_file.name, 'r')
@@ -64,7 +65,6 @@ def main():
             rm.run(i)
     else:
         window = tkinter.Tk()
-        window.resizable(width=False, height=False)
         window.title('Emulator')
 
         real_machine_gui = rm_gui.MachineFrame(window, rm)

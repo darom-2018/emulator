@@ -35,7 +35,6 @@ class Registers(enum.Enum):
 
 
 class ProcessorFrame:
-
     def __init__(self, window):
         self.registers = []
 
@@ -67,18 +66,58 @@ class ProcessorFrame:
 class MemoryFrame:
     def __init__(self, window):
         self.frame = tkinter.LabelFrame(window, text='Memory', padx=5, pady=5)
-        self.frame.pack(side='top')
+        self.frame.pack(side='top', fill='both', expand='true')
 
-        self.columns, self.rows = 32, 33
+        scroll_bar = tkinter.Scrollbar(self.frame, orient='vertical')
+        scroll_bar.pack(fill='y', side='right', expand='false')
+
+        self._canvas = tkinter.Canvas(
+            self.frame,
+            bd=0, highlightthickness=0, yscrollcommand=scroll_bar.set
+        )
+        self._canvas.pack(fill='both', expand='true')
+
+        scroll_bar.config(command=self._canvas.yview)
+
+        self._frame = tkinter.Frame(self._canvas)
+
+        self._canvas.bind('<Configure>', self._canvas_configure)
+        self._window = self._canvas.create_window(
+            0, 0, window=self._frame, anchor='nw'
+        )
+        self._canvas.xview_moveto(0)
+        self._canvas.yview_moveto(0)
+
+        self.columns, self.rows = 32, 35
         self.cells = []
 
         for row in range(self.rows):
             for column in range(self.columns):
                 entry = tkinter.Entry(
-                    self.frame, width=4, font=(
+                    self._frame, width=4, font=(
                         'Consolas', 9))
                 self.cells.append(entry)
                 entry.grid(row=row, column=column)
+
+    def _canvas_configure(self, event):
+        self._canvas.update_idletasks()
+
+        height_request = self._frame.winfo_reqheight()
+        canvas_height = self._canvas.winfo_height()
+        canvas_width = self._canvas.winfo_width()
+
+        self._canvas.itemconfigure(self._window, width=canvas_width)
+
+        if canvas_height > height_request:
+            self._canvas.itemconfigure(self._window, height=canvas_height)
+            self._canvas.config(scrollregion='0 0 {} {}'.format(
+                canvas_width, canvas_height)
+            )
+        else:
+            self._canvas.itemconfigure(self._window, height=height_request)
+            self._canvas.config(scrollregion='0 0 {} {}'.format(
+                canvas_width, height_request)
+            )
 
 
 class MachineFrame:
@@ -87,7 +126,7 @@ class MachineFrame:
 
         self.frame = tkinter.LabelFrame(
             window, text='Real Machine', padx=5, pady=5)
-        self.frame.pack(side='top')
+        self.frame.pack(side='top', fill='both', expand='true')
         self.processor_frame = ProcessorFrame(self.frame)
         self.memory_frame = MemoryFrame(self.frame)
 
@@ -111,7 +150,7 @@ class MachineFrame:
             self.processor_frame.registers[Registers.SP.value].insert(
                 0, format(self.rm.current_vm.cpu.sp, '04X'))
             self.processor_frame.registers[Registers.FLAGS.value].insert(
-                0, format(self.rm.current_vm.cpu.flags, '04X'))
+                0, self.rm.current_vm.cpu.flags.hex().upper())
         else:
             self.processor_frame.registers[Registers.PC.value].insert(
                 0, format(0, '04X'))
@@ -121,7 +160,7 @@ class MachineFrame:
                 0, format(0, '04X'))
 
         self.processor_frame.registers[Registers.PTR.value].insert(
-            0, format(self.rm.cpu.ptr, '08X'))
+            0, self.rm.cpu.ptr.hex().upper())
         self.processor_frame.registers[Registers.SHM.value].insert(
             0, format(self.rm.cpu.shm, '04X'))
         self.processor_frame.registers[Registers.MODE.value].insert(
@@ -135,10 +174,9 @@ class MachineFrame:
 
     def update_memory(self):
         memory = []
-        for i in range(0, len(self.rm.memory.data), 2):
-            word = bytes()
-            word += self.rm.memory.data[i] + self.rm.memory.data[i + 1]
-            memory.append(word)
+        for page in self.rm.memory._pages:
+            for word in page:
+                memory.append(word)
 
         for i in range(len(memory)):
             self.memory_frame.cells[i].delete(0, 'end')
@@ -155,10 +193,10 @@ class MachineFrame:
                 self.processor_frame.registers[Registers.PC.value].get(), 16)
             self.rm.current_vm.cpu.sp = int(
                 self.processor_frame.registers[Registers.SP.value].get(), 16)
-            self.rm.current_vm.cpu.flags = (struct.pack('<H', int(
+            self.rm.current_vm.cpu.flags = bytearray(struct.pack('<H', int(
                 self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
-        self.rm.cpu.ptr = int(
-            self.processor_frame.registers[Registers.PTR.value].get(), 16)
+        self.rm.cpu.ptr = bytearray(struct.pack('<H', int(
+            self.processor_frame.registers[Registers.PTR.value].get(), 16)))
         self.rm.cpu.shm = int(
             self.processor_frame.registers[Registers.SHM.value].get(), 16)
         self.rm.cpu.mode = int(
