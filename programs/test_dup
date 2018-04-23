@@ -1,0 +1,10 @@
+$PROGRAM
+    "TEST_DUP"
+$DATA
+$CODE
+    PUSH 6969h
+    DUP
+    POP
+    POP
+    HALT
+$END

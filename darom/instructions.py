@@ -41,10 +41,9 @@ class DUP(instruction.Instruction):
         super().__init__(b'\x10', 'DUP')
 
     def execute(self, vm):
-        allocation = vm.rm.get_memory_allocation_for_vm(vm)
-        head = vm.rm.memory.read_word(allocation, vm.cpu.sp, virtual=True)
+        head = vm.rm.memory.read_word(vm.cpu.sp, virtual=True)
         vm.cpu.sp += constants.WORD_SIZE
-        vm.rm.memory.write_word(allocation, vm.cpu.sp, head, virtual=True)
+        vm.rm.memory.write_word(vm.cpu.sp, head, virtual=True)
 
 
 class POP(instruction.Instruction):
