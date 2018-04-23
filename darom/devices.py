@@ -22,7 +22,7 @@ class InputDevice():
 
     def set_input(self, data):
         for i in range(len(data)):
-            self._memory.append(str.encode(data[i]))
+            self._memory.append(ord(data[i]))
 
     @property
     def input(self):

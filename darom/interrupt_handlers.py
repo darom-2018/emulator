@@ -66,10 +66,10 @@ def out(rm):
     character_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
 
-    byte_string = bytes()
+    string = ""
     for i in range(character_count):
-        byte_string += rm.memory.read_byte(address + i, virtual=True)
-    rm.channel_device.write_stdoutput(byte_string.decode('ascii'))
+        string += chr(rm.memory.read_byte(address + i, virtual=True))
+    rm.channel_device.write_stdoutput(string)
 
 
 def outi(rm):
