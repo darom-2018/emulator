@@ -60,8 +60,8 @@ class POPM(instruction.Instruction):
         super().__init__(b'\x12', 'POPM')
 
     def execute(self, vm):
-        word = int.from_bytes(vm.stack_pop(), byteorder='little')
-        page = int.from_bytes(vm.stack_pop(), byteorder='little')
+        word = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
+        page = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
         head = vm.stack_pop()
 
         byte_address = util.to_byte_address(page, word)
@@ -82,8 +82,8 @@ class PUSHM(instruction.Instruction):
         super().__init__(b'\x14', 'PUSHM')
 
     def execute(self, vm):
-        word = int.from_bytes(vm.stack_pop(), byteorder='little')
-        page = int.from_bytes(vm.stack_pop(), byteorder='little')
+        word = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
+        page = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
 
         byte_address = util.to_byte_address(page, word)
 
@@ -159,10 +159,10 @@ class NOT(instruction.Instruction):
         super().__init__(b'\x31', 'NOT')
 
     def execute(self, vm):
-        head = int.from_bytes(vm.stack_pop(), byteorder='little')
+        head = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
         result = (head ^ constants.WORD_MAX) & constants.WORD_MAX
 
-        vm.stack_push(result.to_bytes(constants.WORD_SIZE, byteorder='little'))
+        vm.stack_push(result.to_bytes(constants.WORD_SIZE, byteorder=constants.BYTE_ORDER))
 
 
 class OR(instruction.BinaryOperation):
@@ -178,7 +178,7 @@ class XOR(instruction.BinaryOperation):
 def _jmp(instruction, vm, offset):
     # The offset is calculated from the beginning of the instruction.
     # but PC will have been incremented after executing JMP.
-    offset = int.from_bytes(offset, byteorder='little', signed=True)
+    offset = int.from_bytes(offset, byteorder=constants.BYTE_ORDER, signed=True)
     vm.cpu.pc += offset - instruction.length
 
 
@@ -297,14 +297,14 @@ class LOOP(instruction.Instruction):
 
     def execute(self, vm):
         offset = vm.stack_pop()
-        counter = int.from_bytes(vm.stack_pop(), byteorder='little')
+        counter = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
         if not counter > 0:
             return
         counter -= 1
         vm.stack_push(
             counter.to_bytes(
                 constants.WORD_SIZE,
-                byteorder='little'))
+                byteorder=constants.BYTE_ORDER))
         _jmp(self, vm, offset)
 
 

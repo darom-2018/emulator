@@ -70,8 +70,8 @@ class BinaryOperation(Instruction):
         self._operator = operator
 
     def execute(self, vm):
-        lhs = int.from_bytes(vm.stack_pop(), byteorder='little')
-        rhs = int.from_bytes(vm.stack_pop(), byteorder='little')
+        lhs = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
+        rhs = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
 
         try:
             result = self._operator(lhs, rhs)

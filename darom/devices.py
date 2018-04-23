@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
+from . import constants
+
 import struct
 
 
@@ -58,7 +60,10 @@ class LedDevice():
     def set_rgb(self, rgb):
         self._rgb = []
         for byte in rgb:
-            self._rgb.append(int.from_bytes(byte, byteorder='little'))
+            self._rgb.append(
+                int.from_bytes(
+                    byte,
+                    byteorder=constants.BYTE_ORDER))
 
         print(self._rgb)
 

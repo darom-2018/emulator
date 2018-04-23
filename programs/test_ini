@@ -1,5 +1,5 @@
 $PROGRAM
-    "TEST_IN"
+    "TEST_INI"
 $DATA
 $CODE
     INI ;number from input should appear in stack

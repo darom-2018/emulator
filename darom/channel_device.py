@@ -30,7 +30,7 @@ class ChannelDevice():
             string = ""
             for byte in device_input:
                 string += byte.decode()
-            word = int(string).to_bytes(2, byteorder='little')
+            word = int(string).to_bytes(2, byteorder=constants.BYTE_ORDER)
             return word
         return device_input
 

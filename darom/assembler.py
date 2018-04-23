@@ -88,7 +88,7 @@ class Assembler():
         else:
             t.value = int(t.value, 0)
         try:
-            t.value = t.value.to_bytes(constants.WORD_SIZE, byteorder='little')
+            t.value = t.value.to_bytes(constants.WORD_SIZE, byteorder=constants.BYTE_ORDER)
         except OverflowError as e:
             raise AssemblerError(
                 self._file_name, t.lineno, self._calculate_column(t), str(e)
@@ -213,7 +213,7 @@ class Assembler():
                     offset_to_label = self._labels.get(label_reference) - offset
                     instr.arg = offset_to_label.to_bytes(
                         constants.WORD_SIZE,
-                        byteorder='little',
+                        byteorder=constants.BYTE_ORDER,
                         signed=True
                     )
         return program

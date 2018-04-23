@@ -45,11 +45,15 @@ def halt(rm):
 
 
 def in_(rm):
-    block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    block = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
     character_count = int.from_bytes(
         rm.current_vm.stack_pop(),
-        byteorder='little')
+        byteorder=constants.BYTE_ORDER)
     address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
 
     data = rm.channel_device.read_stdinput()
@@ -58,7 +62,7 @@ def in_(rm):
             address + i,
             int.from_bytes(
                 byte,
-                byteorder='little'),
+                byteorder=constants.BYTE_ORDER),
             virtual=True)
 
 
@@ -68,11 +72,15 @@ def ini(rm):
 
 
 def out(rm):
-    block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    block = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
     character_count = int.from_bytes(
         rm.current_vm.stack_pop(),
-        byteorder='little')
+        byteorder=constants.BYTE_ORDER)
     address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
 
     string = ""
@@ -82,18 +90,28 @@ def out(rm):
 
 
 def outi(rm):
-    word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
     rm.channel_device.write_stdoutput(str(word))
 
 
 def shread(rm):
-    word_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    dst_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    dst_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    shared_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    word_count = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    dst_word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    dst_block = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    shared_word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
     shared_block = int.from_bytes(
         rm.current_vm.stack_pop(),
-        byteorder='little')
+        byteorder=constants.BYTE_ORDER)
 
     dst_address = util.to_byte_address(dst_block, dst_word)
     shared_address = util.to_byte_address(
@@ -107,13 +125,21 @@ def shread(rm):
 
 
 def shwrite(rm):
-    word_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    src_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    src_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    shared_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    word_count = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    src_word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    src_block = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
+    shared_word = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder=constants.BYTE_ORDER)
     shared_block = int.from_bytes(
         rm.current_vm.stack_pop(),
-        byteorder='little')
+        byteorder=constants.BYTE_ORDER)
 
     src_address = util.to_byte_address(src_block, src_word)
     shared_address = util.to_byte_address(
