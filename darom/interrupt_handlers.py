@@ -35,13 +35,13 @@ def page_fault(rm):
 
 
 def stack_overflow(rm):
-    print("STACK_OVERFLOW")
+    print('Stack overflow')
     rm.current_vm.cpu.halt()
 
 
 def halt(rm):
     rm.current_vm.cpu.halt()
-    print("HALTED")
+    print('Halted')
 
 
 def in_(rm):
@@ -83,7 +83,7 @@ def out(rm):
         byteorder=constants.BYTE_ORDER)
     address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
 
-    string = ""
+    string = ''
     for i in range(character_count):
         string += chr(rm.memory.read_byte(address + i, virtual=True))
     rm.channel_device.write_stdoutput(string)
@@ -153,9 +153,9 @@ def shwrite(rm):
 
 def shlock(rm):
     if rm.semaphore.p():
-        print("SHARED MEMORY LOCKED")
+        print('Shared memory locked')
     else:
-        print("WAITING FOR SHARED MEMORY TO UNLOCK")
+        print('Waiting for shared memory to unlock')
         rm.current_vm.cpu.pc -= 1
 
 
@@ -172,5 +172,5 @@ def led(rm):
 
 
 def timeout(rm):
-    print("TIMEOUT")
+    print('Timeout')
     rm.current_vm.cpu.halt()

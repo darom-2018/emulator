@@ -27,7 +27,7 @@ class ChannelDevice():
     def read_stdinput(self, convert_to_int=False):
         device_input = self._rm.input_device.input
         if convert_to_int:
-            string = ""
+            string = ''
             for byte in device_input:
                 string += byte.decode()
             word = int(string).to_bytes(2, byteorder=constants.BYTE_ORDER)

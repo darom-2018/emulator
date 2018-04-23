@@ -150,7 +150,7 @@ class RM:
         data_size, code_size = program.size()
         page_count = util.to_page_count(data_size + code_size)
 
-        vm = VM(program, self)
+        self._current_vm = VM(program, self)
         ptr = bytearray(4)
 
         ptr[0] = data_size + code_size
@@ -179,11 +179,11 @@ class RM:
         for i in range(code_size):
             self.memory.write_byte(i + data_size, code_bytes[i], virtual=True)
 
-        vm.cpu.pc = cs
-        vm.cpu.sp = ss
-        vm.cpu.ds = ds
+        self._current_vm.cpu.pc = cs
+        self._current_vm.cpu.sp = ss
+        self._current_vm.cpu.ds = ds
 
-        self._vms.append((vm, ptr))
+        self._vms.append((self._current_vm, ptr))
 
     def _dump_registers(self):
         print(
@@ -276,7 +276,6 @@ class RM:
         except exceptions.InvalidInstructionCodeError:
             self._cpu.pi = 1
         except exceptions.PageFaultError:
-            print('dicks')
             self._cpu.pi = 3
 
         self.test()
