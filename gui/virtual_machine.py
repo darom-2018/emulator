@@ -154,12 +154,7 @@ class MachineFrame:
         self.update()
 
     def input(self):
-        text = bytes(self.io_frame.input_entry.get(), encoding='ascii')
-        byte_array = []
-        for byte in text:
-            byte_array.append(struct.pack('>B', byte))
-        print(byte_array)
-        self.rm.input_device.set_input(byte_array)
+        self.rm.input_device.set_input(self.io_frame.input_entry.get())
         self.update()
 
     def output(self):

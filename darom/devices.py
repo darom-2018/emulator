@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
+import struct
+
 
 class InputDevice():
     def __init__(self):
         self._memory = []
 
-    def set_input(self, data):
-        for i in range(len(data)):
-            self._memory.append(data[i])
+    def set_input(self, string):
+        text = bytes(string, encoding='ascii')
+        for byte in text:
+            self._memory.append(struct.pack('>B', byte))
 
     @property
     def input(self):
@@ -50,14 +53,18 @@ class OutputDevice():
 
 class LedDevice():
     def __init__(self):
-        self._rgb = []
+        self._rgb = [0, 0, 0]
 
     def set_rgb(self, rgb):
-        for rgb in rgb:
-            self._rgb.append(int.from_bytes(rgb, byteorder='little'))
+        self._rgb = []
+        for byte in rgb:
+            self._rgb.append(int.from_bytes(byte, byteorder='little'))
 
         print(self._rgb)
 
     @property
     def rgb(self):
-        return self._rgb
+        color = '#'
+        for byte in self._rgb:
+            color += '{:02X}'.format(byte)
+        return color

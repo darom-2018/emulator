@@ -196,14 +196,7 @@ class MachineFrame:
             self.memory_frame.cells[i].insert(0, memory[i].hex())
 
     def update_led(self):
-        rgb = self.rm.led_device.rgb
-        if rgb:
-            color = '#'
-            for byte in rgb:
-                color += '{:02X}'.format(byte)
-        else:
-            color = '#000000'
-        self.led_frame.label.config(bg=color)
+        self.led_frame.label.config(bg=self.rm.led_device.rgb)
 
     def modify(self):
         self.set_registers()
