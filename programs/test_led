@@ -2,9 +2,9 @@ $PROGRAM
     "TEST_LED"
 $DATA
 $CODE
-    PUSH 1
-    PUSH 2
-    PUSH 3
+    PUSH 200
+    PUSH 30
+    PUSH 30
     LED
     HALT
 $END

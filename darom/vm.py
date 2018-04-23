@@ -28,7 +28,7 @@ class CPU:
         self._halted = False
 
     def test_flags(self):
-        return self._flags[0], self._flags[1] & 0x10, self._flags[1] & 1
+        return self.flags[0], self.flags[1] & 0x10, self.flags[1] & 1
 
     @property
     def halted(self):

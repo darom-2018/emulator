@@ -47,12 +47,19 @@ def halt(rm):
 def in_(rm):
     block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    character_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    character_count = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder='little')
     address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
 
     data = rm.channel_device.read_stdinput()
     for i, byte in enumerate(data):
-        rm.memory.write_byte(address + i, byte, virtual=True)
+        rm.memory.write_byte(
+            address + i,
+            int.from_bytes(
+                byte,
+                byteorder='little'),
+            virtual=True)
 
 
 def ini(rm):
@@ -63,7 +70,9 @@ def ini(rm):
 def out(rm):
     block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    character_count = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    character_count = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder='little')
     address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
 
     string = ""
@@ -82,10 +91,13 @@ def shread(rm):
     dst_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     dst_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     shared_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    shared_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    shared_block = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder='little')
 
     dst_address = util.to_byte_address(dst_block, dst_word)
-    shared_address = util.to_byte_address(rm.shared_memory[shared_block], shared_word)
+    shared_address = util.to_byte_address(
+        rm.shared_memory[shared_block], shared_word)
 
     for i in range(word_count):
         word = rm.memory.read_word(shared_address + (i * constants.WORD_SIZE))
@@ -99,13 +111,17 @@ def shwrite(rm):
     src_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     src_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
     shared_word = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
-    shared_block = int.from_bytes(rm.current_vm.stack_pop(), byteorder='little')
+    shared_block = int.from_bytes(
+        rm.current_vm.stack_pop(),
+        byteorder='little')
 
     src_address = util.to_byte_address(src_block, src_word)
-    shared_address = util.to_byte_address(rm.shared_memory[shared_block], shared_word)
+    shared_address = util.to_byte_address(
+        rm.shared_memory[shared_block], shared_word)
 
     for i in range(word_count):
-        word = rm.memory.read_word(src_address + (i * constants.WORD_SIZE), virtual=True)
+        word = rm.memory.read_word(
+            src_address + (i * constants.WORD_SIZE), virtual=True)
         rm.memory.write_word(shared_address + (i * constants.WORD_SIZE), word)
 
 

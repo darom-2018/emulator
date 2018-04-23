@@ -34,13 +34,22 @@ class Registers(enum.Enum):
     TI = 8
 
 
+class LEDFrame:
+    def __init__(self, window):
+        self.frame = tkinter.LabelFrame(
+            window, text='LED', padx=5, pady=5, height=10)
+        self.frame.pack(side='right')
+        self.label = tkinter.Label(self.frame, width=2)
+        self.label.grid(row=1, column=1)
+
+
 class ProcessorFrame:
     def __init__(self, window):
         self.registers = []
 
         self.frame = tkinter.LabelFrame(
             window, text='Processor', padx=5, pady=5, height=10)
-        self.frame.pack(side='top')
+        self.frame.pack(side='left')
 
         column = 0
         for register in range(len(Registers)):
@@ -127,7 +136,10 @@ class MachineFrame:
         self.frame = tkinter.LabelFrame(
             window, text='Real Machine', padx=5, pady=5)
         self.frame.pack(side='top', fill='both', expand='true')
-        self.processor_frame = ProcessorFrame(self.frame)
+        self.top_frame = tkinter.Frame(self.frame)
+        self.top_frame.pack(side='top')
+        self.processor_frame = ProcessorFrame(self.top_frame)
+        self.led_frame = LEDFrame(self.top_frame)
         self.memory_frame = MemoryFrame(self.frame)
 
         change_button = tkinter.Button(
@@ -139,6 +151,7 @@ class MachineFrame:
     def update(self):
         self.update_registers()
         self.update_memory()
+        self.update_led()
 
     def update_registers(self):
         for register in self.processor_frame.registers:
@@ -182,6 +195,16 @@ class MachineFrame:
             self.memory_frame.cells[i].delete(0, 'end')
             self.memory_frame.cells[i].insert(0, memory[i].hex())
 
+    def update_led(self):
+        rgb = self.rm.led_device.rgb
+        if rgb:
+            color = '#'
+            for byte in rgb:
+                color += '{:02X}'.format(byte)
+        else:
+            color = '#000000'
+        self.led_frame.label.config(bg=color)
+
     def modify(self):
         self.set_registers()
         self.set_memory()
@@ -193,9 +216,9 @@ class MachineFrame:
                 self.processor_frame.registers[Registers.PC.value].get(), 16)
             self.rm.current_vm.cpu.sp = int(
                 self.processor_frame.registers[Registers.SP.value].get(), 16)
-            self.rm.current_vm.cpu.flags = bytearray(struct.pack('<H', int(
+            self.rm.current_vm.cpu.flags = bytearray(struct.pack('>H', int(
                 self.processor_frame.registers[Registers.FLAGS.value].get(), 16)))
-        self.rm.cpu.ptr = bytearray(struct.pack('<H', int(
+        self.rm.cpu.ptr = bytearray(struct.pack('>I', int(
             self.processor_frame.registers[Registers.PTR.value].get(), 16)))
         self.rm.cpu.shm = int(
             self.processor_frame.registers[Registers.SHM.value].get(), 16)

@@ -85,10 +85,10 @@ class IOFrame:
         self.input_entry = tkinter.Entry(self.input_frame, width=45)
         self.input_entry.pack(side='top')
 
-        self.output_label = scrolledtext.ScrolledText(
+        self.output_box = scrolledtext.ScrolledText(
             self.output_frame, width=32, height=5)
-        self.output_label.pack(side='top')
-        self.output_label.config(state=tkinter.DISABLED)
+        self.output_box.pack(side='top')
+        self.output_box.config(state=tkinter.DISABLED)
 
 
 class ProgramFrame:
@@ -154,11 +154,20 @@ class MachineFrame:
         self.update()
 
     def input(self):
-        pass
+        text = bytes(self.io_frame.input_entry.get(), encoding='ascii')
+        byte_array = []
+        for byte in text:
+            byte_array.append(struct.pack('>B', byte))
+        print(byte_array)
+        self.rm.input_device.set_input(byte_array)
+        self.update()
 
     def output(self):
-        self.io_frame.output_label.config(state=tkinter.NORMAL)
-        self.io_frame.output_label.config(state=tkinter.DISABLED)
+        self.io_frame.output_box.config(state=tkinter.NORMAL)
+        self.io_frame.output_box.insert(
+            tkinter.END, self.rm.output_device.output)
+        self.io_frame.output_box.config(state=tkinter.DISABLED)
+        self.io_frame.output_box.config(state=tkinter.DISABLED)
 
     def step(self):
         self.rm.step(self.vm_id)
@@ -169,10 +178,10 @@ class MachineFrame:
         self.update()
 
     def update(self):
+        self.output()
         self.update_registers()
         self.update_memory()
-        self.rm_gui.update_registers()
-        self.rm_gui.update_memory()
+        self.rm_gui.update()
 
     def update_registers(self):
         for register in self.processor_frame.registers:
@@ -184,11 +193,8 @@ class MachineFrame:
             0, format(self.vm.cpu.sp, '04X'))
         self.processor_frame.registers[Registers.DS.value].insert(
             0, format(self.vm.cpu.ds, '04X'))
-        self.processor_frame.registers[Registers.FLAGS.value].insert(
-            0, format(
-                int.from_bytes(self.vm.cpu.flags, byteorder=constants.BYTE_ORDER), '04X'
-            )
-        )
+        self.processor_frame.registers[Registers.FLAGS.value].insert(0, format(
+            int.from_bytes(self.vm.cpu.flags, byteorder=constants.BYTE_ORDER), '04X'))
 
     def update_memory(self):
         memory = []
