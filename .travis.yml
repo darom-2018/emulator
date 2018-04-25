@@ -11,8 +11,9 @@ script:
       --ignore=E501,W504
       .
   # Ideally, we’d also fail on some/all warnings, but a number of them are nontrivial fixes.
+  # And keep --errors-only before --disable, as the command-line argument parser is garbage.
   - pylint
-      --disable=not-callable
       --errors-only
+      --disable=not-callable
       --ignore=CVS,__pycache__,parsetab.py
       darom
