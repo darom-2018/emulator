@@ -20,11 +20,12 @@
 import argparse
 import sys
 import tkinter
+from tkinter import filedialog
+
 from darom.assembler import Assembler
-from darom.rm import RM
+from darom.real_machine import RealMachine
 from gui import real_machine as rm_gui
 from gui import virtual_machine as vm_gui
-from tkinter import filedialog
 
 
 def start_virtual_machine(window, real_machine_gui, real_machine):
@@ -56,22 +57,22 @@ def main():
     parser.add_argument('--cli', action='store_true')
 
     args = parser.parse_args()
-    rm = RM()
+    real_machine = RealMachine()
 
     if args.cli:
         for file, i in zip(args.files, range(len(args.files))):
             print('Loading {}'.format(file.name))
-            rm.load(Assembler(rm.cpu).assemble(file))
-            rm.run(i)
+            real_machine.load(Assembler(real_machine.cpu).assemble(file))
+            real_machine.run(i)
     else:
         window = tkinter.Tk()
         window.title('Emulator')
 
-        real_machine_gui = rm_gui.MachineFrame(window, rm)
+        real_machine_gui = rm_gui.MachineFrame(window, real_machine)
 
         load_program_button = tkinter.Button(
             window, text='Load program', command=lambda: start_virtual_machine(
-                window, real_machine_gui, rm))
+                window, real_machine_gui, real_machine))
         load_program_button.pack(side='bottom')
 
         window.mainloop()

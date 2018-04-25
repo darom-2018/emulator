@@ -15,12 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
-from . import util
-from .exceptions import PageFaultError
-
-import copy
 import random
+
+from darom import constants
+from darom import util
+from darom.exceptions import PageFaultError
 
 
 class Memory:

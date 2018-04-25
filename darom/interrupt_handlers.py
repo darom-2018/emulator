@@ -15,50 +15,50 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
-from . import util
+from darom import constants
+from darom import util
 
 
-def invalid_instruction_code(rm):
+def invalid_instruction_code(real_machine):
     print('Invalid instruction code')
-    rm.current_vm.cpu.halt()
+    real_machine.current_vm.cpu.halt()
 
 
-def invalid_operand(rm):
+def invalid_operand(real_machine):
     print('Invalid operand')
-    rm.current_vm.cpu.halt()
+    real_machine.current_vm.cpu.halt()
 
 
-def page_fault(rm):
+def page_fault(real_machine):
     print('Page fault')
-    rm.current_vm.cpu.halt()
+    real_machine.current_vm.cpu.halt()
 
 
-def stack_overflow(rm):
+def stack_overflow(real_machine):
     print('Stack overflow')
-    rm.current_vm.cpu.halt()
+    real_machine.current_vm.cpu.halt()
 
 
-def halt(rm):
-    rm.current_vm.cpu.halt()
+def halt(real_machine):
+    real_machine.current_vm.cpu.halt()
     print('Halted')
 
 
-def in_(rm):
+def in_(real_machine):
     block = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     character_count = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
-    address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
+    address = real_machine.current_vm.cpu.ds + util.to_byte_address(block, word)
 
-    data = rm.channel_device.read_stdinput()
+    data = real_machine.channel_device.read_stdinput()
     for i, byte in enumerate(data):
-        rm.memory.write_byte(
+        real_machine.memory.write_byte(
             address + i,
             int.from_bytes(
                 byte,
@@ -66,111 +66,113 @@ def in_(rm):
             virtual=True)
 
 
-def ini(rm):
-    data = rm.channel_device.read_stdinput(convert_to_int=True)
-    rm.current_vm.stack_push(data)
+def ini(real_machine):
+    data = real_machine.channel_device.read_stdinput(convert_to_int=True)
+    real_machine.current_vm.stack_push(data)
 
 
-def out(rm):
+def out(real_machine):
     block = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     character_count = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
-    address = rm.current_vm.cpu.ds + util.to_byte_address(block, word)
+    address = real_machine.current_vm.cpu.ds + util.to_byte_address(block, word)
 
     string = ''
     for i in range(character_count):
-        string += chr(rm.memory.read_byte(address + i, virtual=True))
-    rm.channel_device.write_stdoutput(string)
+        string += chr(real_machine.memory.read_byte(address + i, virtual=True))
+    real_machine.channel_device.write_stdoutput(string)
 
 
-def outi(rm):
+def outi(real_machine):
     word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
-    rm.channel_device.write_stdoutput(str(word))
+    real_machine.channel_device.write_stdoutput(str(word))
 
 
-def shread(rm):
+def shread(real_machine):
     word_count = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     dst_word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     dst_block = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     shared_word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     shared_block = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
 
     dst_address = util.to_byte_address(dst_block, dst_word)
     shared_address = util.to_byte_address(
-        rm.shared_memory[shared_block], shared_word)
+        real_machine.shared_memory[shared_block], shared_word)
 
     for i in range(word_count):
-        word = rm.memory.read_word(shared_address + (i * constants.WORD_SIZE))
-        rm.memory.write_word(dst_address +
-                             (i * constants.WORD_SIZE), word,
-                             virtual=True)
+        word = real_machine.memory.read_word(shared_address + (i * constants.WORD_SIZE))
+        real_machine.memory.write_word(
+            dst_address + (i * constants.WORD_SIZE),
+            word,
+            virtual=True
+        )
 
 
-def shwrite(rm):
+def shwrite(real_machine):
     word_count = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     src_word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     src_block = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     shared_word = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
     shared_block = int.from_bytes(
-        rm.current_vm.stack_pop(),
+        real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
 
     src_address = util.to_byte_address(src_block, src_word)
     shared_address = util.to_byte_address(
-        rm.shared_memory[shared_block], shared_word)
+        real_machine.shared_memory[shared_block], shared_word)
 
     for i in range(word_count):
-        word = rm.memory.read_word(
+        word = real_machine.memory.read_word(
             src_address + (i * constants.WORD_SIZE), virtual=True)
-        rm.memory.write_word(shared_address + (i * constants.WORD_SIZE), word)
+        real_machine.memory.write_word(shared_address + (i * constants.WORD_SIZE), word)
 
 
-def shlock(rm):
-    if rm.semaphore.p():
+def shlock(real_machine):
+    if real_machine.semaphore.acquire():
         print('Shared memory locked')
     else:
         print('Waiting for shared memory to unlock')
-        rm.current_vm.cpu.pc -= 1
+        real_machine.current_vm.cpu.pc -= 1
 
 
-def shunlock(rm):
-    rm.semaphore.v()
+def shunlock(real_machine):
+    real_machine.semaphore.release()
 
 
-def led(rm):
-    B = rm.current_vm.stack_pop()
-    G = rm.current_vm.stack_pop()
-    R = rm.current_vm.stack_pop()
+def led(real_machine):
+    blue = real_machine.current_vm.stack_pop()
+    green = real_machine.current_vm.stack_pop()
+    red = real_machine.current_vm.stack_pop()
 
-    rm.channel_device.write_led([R, G, B])
+    real_machine.channel_device.write_led([red, green, blue])
 
 
-def timeout(rm):
+def timeout(real_machine):
     print('Timeout')
-    rm.current_vm.cpu.halt()
+    real_machine.current_vm.cpu.halt()

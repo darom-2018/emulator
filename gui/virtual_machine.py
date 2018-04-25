@@ -117,7 +117,7 @@ class MachineFrame:
         self.rm_gui = rm_gui
         self.vm_id = vm_id
         self.vm = vm
-        self.rm = self.vm.rm
+        self.rm = self.vm.real_machine
         self.code = code
 
         self.frame = tkinter.LabelFrame(
@@ -154,7 +154,7 @@ class MachineFrame:
         self.update()
 
     def input(self):
-        self.rm.input_device.set_input(self.io_frame.input_entry.get())
+        self.rm.input_device.input = self.io_frame.input_entry.get()
         self.update()
 
     def output(self):

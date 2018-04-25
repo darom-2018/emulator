@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
-from . import exceptions
+from darom import constants
+from darom import exceptions
 
 
 class CPU:
@@ -38,11 +38,11 @@ class CPU:
         self._halted = True
 
 
-class VM:
-    def __init__(self, program, rm):
+class VirtualMachine:
+    def __init__(self, program, real_machine):
         self._cpu = CPU()
         self._program = program
-        self._rm = rm
+        self._real_machine = real_machine
 
     @property
     def cpu(self):
@@ -53,8 +53,8 @@ class VM:
         return self._program
 
     @property
-    def rm(self):
-        return self._rm
+    def real_machine(self):
+        return self._real_machine
 
     @property
     def running(self):
@@ -62,12 +62,16 @@ class VM:
 
     def stack_pop(self):
         self.cpu.sp -= constants.WORD_SIZE
-        head = self.rm.memory.read_word(self.cpu.sp, virtual=True)
+        head = self.real_machine.memory.read_word(self.cpu.sp, virtual=True)
         return head
 
     def stack_push(self, word):
         try:
-            head = self.rm.memory.write_word(self.cpu.sp, word, virtual=True)
+            head = self.real_machine.memory.write_word(
+                self.cpu.sp,
+                word,
+                virtual=True
+            )
         except exceptions.PageFaultError:
-            self._rm.cpu.pi = 4
+            self.real_machine.cpu.pi = 4
         self.cpu.sp += constants.WORD_SIZE

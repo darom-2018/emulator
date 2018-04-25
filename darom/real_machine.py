@@ -15,31 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from . import constants
-from . import exceptions
-from . import instructions
-from . import interrupt_handlers
-from . import util
-
-from .assembler import Assembler
-from .channel_device import ChannelDevice
-from .devices import InputDevice, OutputDevice, LedDevice
-from .instruction import Instruction, IOInstruction
-from .memory import Memory
-from .semaphore import Semaphore
-from .vm import VM
-
 import inspect
-import sys
 
-import pdb
+from darom import constants
+from darom import exceptions
+from darom import instructions
+from darom import interrupt_handlers
+from darom import util
+from darom.channel_device import ChannelDevice
+from darom.devices import InputDevice, OutputDevice, LedDevice
+from darom.instruction import Instruction, IOInstruction
+from darom.memory import Memory
+from darom.semaphore import Semaphore
+from darom.virtual_machine import VirtualMachine
 
 
 class InstructionSet():
     def __init__(self, instructions):
-        self._mnemonic_dict = {instruction.mnemonic: type(
-            instruction) for instruction in instructions}
+        self._mnemonic_dict = {
+            instruction.mnemonic: type(instruction) for instruction in instructions
+        }
         self._code_dict = {
             instruction.code: type(instruction) for instruction in instructions
         }
@@ -60,9 +55,9 @@ class InstructionSet():
 class _DaromInstructionSet(InstructionSet):
     def __init__(self):
         instrs = []
-        for k, v in inspect.getmembers(instructions, inspect.isclass):
-            if issubclass(v, Instruction):
-                instrs.append(v())
+        for key, value in inspect.getmembers(instructions, inspect.isclass):
+            if issubclass(value, Instruction):
+                instrs.append(value())
         super().__init__(instrs)
 
 
@@ -87,7 +82,7 @@ class HLP:
         self.ti = 100
 
 
-class RM:
+class RealMachine:
     def __init__(self):
         self._cpu = HLP()
         self._user_memory = Memory(70, self.cpu)
@@ -150,7 +145,7 @@ class RM:
         data_size, code_size = program.size()
         page_count = util.to_page_count(data_size + code_size)
 
-        self._current_vm = VM(program, self)
+        self._current_vm = VirtualMachine(program, self)
         ptr = bytearray(4)
 
         ptr[0] = data_size + code_size
@@ -162,11 +157,14 @@ class RM:
 
         vm_allocation = self.memory.allocate(page_count + 2)
 
-        for i in range(len(vm_allocation)):
-            word = vm_allocation[i].to_bytes(
-                constants.WORD_SIZE, byteorder=constants.BYTE_ORDER
+        for i, page in enumerate(vm_allocation):
+            word = page.to_bytes(
+                constants.WORD_SIZE,
+                byteorder=constants.BYTE_ORDER
             )
-            self.memory.write_word(util.to_byte_address(self.cpu.ptr[2], i), word)
+            self.memory.write_word(
+                util.to_byte_address(self.cpu.ptr[2], i), word
+            )
 
         data_bytes, code_bytes = program.as_bytes()
 

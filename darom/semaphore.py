@@ -24,13 +24,11 @@ class Semaphore():
     def value(self):
         return self._value
 
-    def p(self):
+    def acquire(self):
         if self._value > 0:
             self._value -= 1
             return True
-        else:
-            # print("Waiting for semaphore to unlock")
-            return False
+        return False
 
-    def v(self):
+    def release(self):
         self._value += 1

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
+from darom import constants
 
 
 class Instruction():
@@ -44,7 +44,7 @@ class Instruction():
     def takes_arg(self):
         return self._takes_arg
 
-    def execute(self, vm):
+    def execute(self, virtual_machine):
         pass
 
 
@@ -69,9 +69,15 @@ class BinaryOperation(Instruction):
 
         self._operator = operator
 
-    def execute(self, vm):
-        lhs = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
-        rhs = int.from_bytes(vm.stack_pop(), byteorder=constants.BYTE_ORDER)
+    def execute(self, virtual_machine):
+        lhs = int.from_bytes(
+            virtual_machine.stack_pop(),
+            byteorder=constants.BYTE_ORDER
+        )
+        rhs = int.from_bytes(
+            virtual_machine.stack_pop(),
+            byteorder=constants.BYTE_ORDER
+        )
 
         try:
             result = self._operator(lhs, rhs)
@@ -84,16 +90,17 @@ class BinaryOperation(Instruction):
             # This is intentional, as the result can overflow
             zf = result == 0
 
-            vm.cpu.flags[0] = cf & 1
-            vm.cpu.flags[1] = ((pf & 1) << 4) | (zf & 1)
+            virtual_machine.cpu.flags[0] = cf & 1
+            virtual_machine.cpu.flags[1] = ((pf & 1) << 4) | (zf & 1)
 
-            vm.stack_push(
+            virtual_machine.stack_push(
                 result.to_bytes(
-                    constants.WORD_SIZE, byteorder=constants.BYTE_ORDER
+                    constants.WORD_SIZE,
+                    byteorder=constants.BYTE_ORDER
                 )
             )
         except ZeroDivisionError:
-            vm.rm.cpu.pi = 2
+            virtual_machine.real_machine.cpu.pi = 2
 
 
 class IOInstruction(Instruction):

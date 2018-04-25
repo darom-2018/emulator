@@ -15,27 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
-
-import pdb
+from darom import constants
 
 
 class ChannelDevice():
-    def __init__(self, rm):
-        self._rm = rm
+    def __init__(self, real_machine):
+        self._real_machine = real_machine
 
     def read_stdinput(self, convert_to_int=False):
-        device_input = self._rm.input_device.input
+        # TODO: fix the case when no input has been provided prior to calling
+        #       this by either blocking or using magic.
+        device_input = self._real_machine.input_device.input
+
         if convert_to_int:
             string = ''
+
             for byte in device_input:
                 string += byte.decode()
-            word = int(string).to_bytes(2, byteorder=constants.BYTE_ORDER)
+
+            word = int(string).to_bytes(
+                constants.WORD_SIZE,
+                byteorder=constants.BYTE_ORDER
+            )
+
             return word
+
         return device_input
 
     def write_stdoutput(self, data):
-        self._rm.output_device.set_output(data)
+        self._real_machine.output_device.output = data
 
     def write_led(self, rgb):
-        self._rm.led_device.set_rgb(rgb)
+        self._real_machine.led_device.rgb = rgb

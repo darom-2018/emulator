@@ -15,17 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import constants
-from . import instructions
-
-from .instruction import Instruction, Label
-from .program import Program
-
 from ply import lex
 from ply import yacc
-from ply.lex import TOKEN
 
-import copy
+from darom import constants
+from darom import instructions
+from darom.instruction import Label
+from darom.program import Program
 
 
 class AssemblerError(Exception):
@@ -36,12 +32,13 @@ class AssemblerError(Exception):
 class Assembler():
     def __init__(self, cpu):
         self._cpu = cpu
-        self._lexer = lex.lex(module=self)
-        self._parser = yacc.yacc(module=self)
         self._labels = {}
+        self._lexer = lex.lex(module=self)
+        self._lexpos = 0
+        self._parser = yacc.yacc(module=self)
+        self._file_name = None
 
     # Lexer
-    global _sections
     _sections = {
         'PROGRAM': 'PROGRAM',
         'DATA': 'DATA',
@@ -61,130 +58,163 @@ class Assembler():
 
     t_ignore = ' \t'
 
-    def _calculate_column(self, t):
-        return t.lexpos - self._lexpos
+    def _calculate_column(self, token):
+        return token.lexpos - self._lexpos
 
-    def t_BYTE_STRING(self, t):
+    def t_BYTE_STRING(self, token):
         r'"([^"]*)"'
-        try:
-            t.value = t.value[1:-1].encode('ascii')
-        except UnicodeEncodeError as e:
-            raise AssemblerError(
-                # Adding 1 to the column index since we slice the string.
-                self._file_name, t.lineno, self._calculate_column(t) + 1, str(e)
-            )
-        return t
 
-    def t_COMMENT(self, t):
+        try:
+            token.value = token.value[1:-1].encode('ascii')
+        except UnicodeEncodeError as exception:
+            raise AssemblerError(
+                self._file_name,
+                token.lineno,
+                # Adding 1 to the column index since we slice the string.
+                self._calculate_column(token) + 1, str(exception)
+            )
+        return token
+
+    def t_COMMENT(self, token):
         r';.*'
+
         pass
 
-    def t_INTEGER(self, t):
+    def t_INTEGER(self, token):
         r'[\dA-Fa-f]+h|0[Xx][\dA-Fa-f]+|0\d+|\d+'
-        if t.value.startswith('0') and not t.value.lower().startswith('0x'):
-            t.value = int(t.value, 8)
-        elif t.value.endswith('h'):
-            t.value = int(t.value[:-1], 16)
+
+        value = token.value
+        if value.startswith('0') and not value.lower().startswith('0x'):
+            value = int(value, 8)
+        elif value.endswith('h'):
+            value = int(value[:-1], 16)
         else:
-            t.value = int(t.value, 0)
+            value = int(value, 0)
+
         try:
-            t.value = t.value.to_bytes(constants.WORD_SIZE, byteorder=constants.BYTE_ORDER)
-        except OverflowError as e:
-            raise AssemblerError(
-                self._file_name, t.lineno, self._calculate_column(t), str(e)
+            token.value = value.to_bytes(
+                constants.WORD_SIZE,
+                byteorder=constants.BYTE_ORDER
             )
-        return t
+        except OverflowError as exception:
+            raise AssemblerError(
+                self._file_name,
+                token.lineno,
+                self._calculate_column(token),
+                str(exception)
+            )
 
-    def t_ID(self, t):
+        return token
+
+    def t_ID(self, token):
         r'(?i)@[\da-z]+|[\da-z]+\:|[\da-z]+'
-        if t.value.startswith('@'):
-            t.type = 'LABEL_REFERENCE'
-        elif t.value.endswith(':'):
-            t.type = 'LABEL'
-            t.value = t.value[:-1]
-            if t.value in self._labels:
+
+        if token.value.startswith('@'):
+            token.type = 'LABEL_REFERENCE'
+        elif token.value.endswith(':'):
+            token.type = 'LABEL'
+            token.value = token.value[:-1]
+            if token.value in self._labels:
                 raise AssemblerError(
-                    self._file_name, t.lineno, self._calculate_column(t),
-                    'Redefinition of label “{}”'.format(t.value)
+                    self._file_name,
+                    token.lineno,
+                    self._calculate_column(token),
+                    'Redefinition of label “{}”'.format(token.value)
                 )
-            self._labels[t.value] = 0
+            self._labels[token.value] = 0
         else:
-            t.type = 'INSTRUCTION'
-        return t
+            token.type = 'INSTRUCTION'
 
-    def t_SECTION(self, t):
+        return token
+
+    def t_SECTION(self, token):
         r'\$[A-Z]+'
-        t.type = _sections.get(t.value[1:])
-        return t
 
-    def t_newline(self, t):
+        token.type = self._sections.get(token.value[1:])
+
+        return token
+
+    def t_newline(self, token):
         r'\n+'
-        t.lexer.lineno += len(t.value)
-        self._lexpos = t.lexpos
 
-    def t_error(self, t):
-        print('Error: {}:{}: Illegal character: {}'.format(t.lineno,
-                                                           self._calculate_column(t),
-                                                           t.value[0]))
+        token.lexer.lineno += len(token.value)
+        self._lexpos = token.lexpos
+
+    def t_error(self, token):
+        print(
+            'Error: {}:{}: Illegal character: {}'.format(
+                token.lineno,
+                self._calculate_column(token),
+                token.value[0]
+            )
+        )
 
     # Parser
-    def p_program(self, p):
+    def p_program(self, production):
         '''
         program : PROGRAM BYTE_STRING DATA data CODE code END
         '''
-        p[0] = Program(p[2], p[4], p[6])
 
-    def p_data(self, p):
+        production[0] = Program(production[2], production[4], production[6])
+
+    def p_data(self, production):
         '''
         data :
              | BYTE_STRING data
              | INTEGER data
         '''
-        if len(p) == 1:
-            p[0] = []
-        else:
-            p[0] = [p[1]] + p[2]
 
-    def p_argument(self, p):
+        if len(production) == 1:
+            production[0] = []
+        else:
+            production[0] = [production[1]] + production[2]
+
+    def p_argument(self, production):
         '''
         argument : INTEGER
                  | LABEL_REFERENCE
         '''
-        p[0] = p[1]
 
-    def p_instruction(self, p):
+        production[0] = production[1]
+
+    def p_instruction(self, production):
         '''
         instruction : INSTRUCTION
                     | INSTRUCTION argument
         '''
-        arg = None
-        if len(p) == 3:
-            arg = p[2]
-        p[0] = getattr(instructions, p[1].upper())()
-        p[0].arg = arg
 
-    def p_labeled_instruction(self, p):
+        arg = None
+
+        if len(production) == 3:
+            arg = production[2]
+
+        production[0] = getattr(instructions, production[1].upper())()
+        production[0].arg = arg
+
+    def p_labeled_instruction(self, production):
         '''
         labeled_instruction : LABEL instruction
         '''
-        p[0] = Label(p[1], p[2])
 
-    def p_code(self, p):
+        production[0] = Label(production[1], production[2])
+
+    def p_code(self, production):
         '''
         code :
              | code instruction
              | code labeled_instruction
         '''
 
-        if len(p) == 1:
-            p[0] = []
+        if len(production) == 1:
+            production[0] = []
         else:
-            p[0] = p[1] + [p[2]]
+            production[0] = production[1] + [production[2]]
 
-    def p_error(self, p):
+    def p_error(self, production):
         raise TypeError(
             'Syntax error: token type {} not expected: {}'.format(
-                p.type, p.value
+                production.type,
+                production.value
             )
         )
 
