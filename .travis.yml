@@ -10,9 +10,8 @@ script:
       --exclude=.git,__pycache__,parsetab.py
       --ignore=E501,W504
       .
+  # Ideally, we’d also fail on some/all warnings, but a number of them are nontrivial fixes.
   - pylint
-      # Ideally, we’d also fail on some/all warnings, but a number of them are non-trivial fixes.
-      # --disable=invalid-name,missing-docstring,not-callable,too-few-public-methods
       --errors-only
       --ignore=CVS,__pycache__,parsetab.py
       darom
