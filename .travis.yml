@@ -3,10 +3,14 @@ python:
   - 3.6
 install:
   - pip install -r requirements.txt
-  - pip install pycodestyle
+  - pip install pycodestyle pylint
 script:
   - python -m unittest discover
   - pycodestyle
       --exclude=.git,__pycache__,parsetab.py
       --ignore=E501,W504
       .
+  - pylint
+      --disable=invalid-name,missing-docstring,not-callable,too-few-public-methods
+      --ignore=CVS,__pycache__,parsetab.py
+      darom
