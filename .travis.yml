@@ -12,6 +12,7 @@ script:
       .
   # Ideally, we’d also fail on some/all warnings, but a number of them are nontrivial fixes.
   - pylint
+      --disable=not-callable
       --errors-only
       --ignore=CVS,__pycache__,parsetab.py
       darom
