@@ -32,9 +32,8 @@ from darom.virtual_machine import VirtualMachine
 
 class InstructionSet():
     def __init__(self, instructions):
-        self._mnemonic_dict = {
-            instruction.mnemonic: type(instruction) for instruction in instructions
-        }
+        self._mnemonic_dict = {instruction.mnemonic: type(
+            instruction) for instruction in instructions}
         self._code_dict = {
             instruction.code: type(instruction) for instruction in instructions
         }
@@ -228,11 +227,9 @@ class RealMachine:
 
         if (self._cpu.pi) > 0:
             pi_handlers[self._cpu.pi](self)
-            self._cpu.pi = 0
         if (self._cpu.si) > 0:
             self._dump_registers()
             si_handlers[self._cpu.si](self)
-            self._cpu.si = 0
         if self._cpu.ti <= 0:
             interrupt_handlers.timeout(self)
 
@@ -253,7 +250,8 @@ class RealMachine:
                 self._current_vm.cpu.pc,
                 virtual=True
             )
-            instruction = instruction.to_bytes(1, byteorder=constants.BYTE_ORDER)
+            instruction = instruction.to_bytes(
+                1, byteorder=constants.BYTE_ORDER)
 
             self._current_vm.cpu.pc += 1
 

@@ -77,16 +77,23 @@ class MemoryFrame:
         self.frame = tkinter.LabelFrame(window, text='Memory', padx=5, pady=5)
         self.frame.pack(side='top', fill='both', expand='true')
 
-        scroll_bar = tkinter.Scrollbar(self.frame, orient='vertical')
-        scroll_bar.pack(fill='y', side='right', expand='false')
+        vertical_scroll_bar = tkinter.Scrollbar(self.frame, orient='vertical')
+        vertical_scroll_bar.pack(fill='y', side='right', expand='false')
+
+        horizontal_scroll_bar = tkinter.Scrollbar(
+            self.frame, orient='horizontal')
+        horizontal_scroll_bar.pack(fill='x', side='bottom', expand='false')
 
         self._canvas = tkinter.Canvas(
             self.frame,
-            bd=0, highlightthickness=0, yscrollcommand=scroll_bar.set
-        )
+            bd=0,
+            highlightthickness=0,
+            yscrollcommand=vertical_scroll_bar.set,
+            xscrollcommand=horizontal_scroll_bar.set)
         self._canvas.pack(fill='both', expand='true')
 
-        scroll_bar.config(command=self._canvas.yview)
+        vertical_scroll_bar.config(command=self._canvas.yview)
+        horizontal_scroll_bar.config(command=self._canvas.xview)
 
         self._frame = tkinter.Frame(self._canvas)
 
@@ -101,7 +108,9 @@ class MemoryFrame:
         self.cells = []
 
         for row in range(self.rows):
+            self._frame.grid_rowconfigure(row, weight=1)
             for column in range(self.columns):
+                self._frame.grid_columnconfigure(column, weight=1)
                 entry = tkinter.Entry(
                     self._frame, width=4, font=(
                         'Consolas', 9))
@@ -112,20 +121,35 @@ class MemoryFrame:
         self._canvas.update_idletasks()
 
         height_request = self._frame.winfo_reqheight()
+        width_request = self._frame.winfo_reqwidth()
         canvas_height = self._canvas.winfo_height()
         canvas_width = self._canvas.winfo_width()
 
-        self._canvas.itemconfigure(self._window, width=canvas_width)
+        self._canvas.itemconfigure(
+            self._window,
+            width=canvas_width,
+            height=canvas_height)
 
         if canvas_height > height_request:
             self._canvas.itemconfigure(self._window, height=canvas_height)
             self._canvas.config(scrollregion='0 0 {} {}'.format(
-                canvas_width, canvas_height)
+                width_request, canvas_height)
             )
         else:
             self._canvas.itemconfigure(self._window, height=height_request)
             self._canvas.config(scrollregion='0 0 {} {}'.format(
+                width_request, height_request)
+            )
+
+        if canvas_width > width_request:
+            self._canvas.itemconfigure(self._window, width=canvas_width)
+            self._canvas.config(scrollregion='0 0 {} {}'.format(
                 canvas_width, height_request)
+            )
+        else:
+            self._canvas.itemconfigure(self._window, width=width_request)
+            self._canvas.config(scrollregion='0 0 {} {}'.format(
+                width_request, height_request)
             )
 
 

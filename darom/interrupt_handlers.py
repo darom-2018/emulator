@@ -54,7 +54,8 @@ def in_(real_machine):
     character_count = int.from_bytes(
         real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
-    address = real_machine.current_vm.cpu.ds + util.to_byte_address(block, word)
+    address = real_machine.current_vm.cpu.ds + \
+        util.to_byte_address(block, word)
 
     data = real_machine.channel_device.read_stdinput()
     for i, byte in enumerate(data):
@@ -81,7 +82,8 @@ def out(real_machine):
     character_count = int.from_bytes(
         real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
-    address = real_machine.current_vm.cpu.ds + util.to_byte_address(block, word)
+    address = real_machine.current_vm.cpu.ds + \
+        util.to_byte_address(block, word)
 
     string = ''
     for i in range(character_count):
@@ -118,7 +120,8 @@ def shread(real_machine):
         real_machine.shared_memory[shared_block], shared_word)
 
     for i in range(word_count):
-        word = real_machine.memory.read_word(shared_address + (i * constants.WORD_SIZE))
+        word = real_machine.memory.read_word(
+            shared_address + (i * constants.WORD_SIZE))
         real_machine.memory.write_word(
             dst_address + (i * constants.WORD_SIZE),
             word,
@@ -150,7 +153,8 @@ def shwrite(real_machine):
     for i in range(word_count):
         word = real_machine.memory.read_word(
             src_address + (i * constants.WORD_SIZE), virtual=True)
-        real_machine.memory.write_word(shared_address + (i * constants.WORD_SIZE), word)
+        real_machine.memory.write_word(
+            shared_address + (i * constants.WORD_SIZE), word)
 
 
 def shlock(real_machine):
