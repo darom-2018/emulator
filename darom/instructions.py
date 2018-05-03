@@ -91,7 +91,9 @@ class PUSHM(instruction.Instruction):
 
         byte_address = util.to_byte_address(page, word)
 
-        word = virtual_machine.real_machine.memory.read_word(byte_address)
+        word = virtual_machine.real_machine.memory.read_word(
+            byte_address, virtual=True
+        )
 
         virtual_machine.stack_push(word)
 
