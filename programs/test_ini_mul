@@ -1,12 +1,10 @@
 $PROGRAM
-    "TEST_IN_MUL"
+    "TEST_INI_MUL"
 $DATA
     0x7F
 $CODE
     INI
-    PUSH 0
-    PUSH 0
-    PUSHM
+    INI
     MUL
     OUTI
     HALT

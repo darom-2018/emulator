@@ -129,12 +129,6 @@ class MachineFrame:
         self.memory_frame = MemoryFrame(self.frame)
         self.program_frame = ProgramFrame(window, code)
 
-        input_button = tkinter.Button(
-            self.io_frame.input_frame,
-            text='Input',
-            command=self.input)
-        input_button.pack(side='bottom')
-
         step_button = tkinter.Button(
             self.program_frame.frame,
             text='Step',
@@ -154,8 +148,8 @@ class MachineFrame:
         self.update()
 
     def input(self):
-        self.rm.input_device.input = self.io_frame.input_entry.get()
-        self.update()
+        if self.io_frame.input_entry.get():
+            self.rm.input_device.input = self.io_frame.input_entry.get()
 
     def output(self):
         self.io_frame.output_box.config(state=tkinter.NORMAL)
@@ -165,6 +159,7 @@ class MachineFrame:
         self.io_frame.output_box.config(state=tkinter.DISABLED)
 
     def step(self):
+        self.input()
         self.rm.step(self.vm_id)
         self.update()
 
