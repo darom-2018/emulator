@@ -148,7 +148,7 @@ class RealMachine:
         ptr = bytearray(4)
 
         ptr[0] = data_size + code_size
-        ptr[1] = page_count
+        ptr[1] = page_count + 2
         ptr[2] = self.memory.allocate(1)[0]
         ptr[3] = 0
 
