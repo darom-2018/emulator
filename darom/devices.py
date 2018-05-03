@@ -34,6 +34,7 @@ class InputDevice:
 
     @input.setter
     def input(self, string):
+        self._memory = []
         text = bytes(string, encoding='ascii')
         for byte in text:
             self._memory.append(struct.pack('>B', byte))
