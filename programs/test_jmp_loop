@@ -3,6 +3,10 @@ $PROGRAM
 $DATA
 $CODE
 label:
+    PUSH 1
+    PUSH 2
+    CMP
+    POP
     PUSH @label
-    JMP
+    JNE
 $END
