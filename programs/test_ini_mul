@@ -1,9 +1,17 @@
 $PROGRAM
     "TEST_INI_MUL"
 $DATA
-    0x7F
+    "Iveskite skaiciu:"
 $CODE
+    PUSH 18
+    PUSH 0
+    PUSH 0
+    OUT
     INI
+    PUSH 18
+    PUSH 0
+    PUSH 0
+    OUT
     INI
     MUL
     OUTI
