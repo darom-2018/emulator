@@ -67,7 +67,7 @@ class VirtualMachine:
 
     def stack_push(self, word):
         try:
-            head = self.real_machine.memory.write_word(
+            self.real_machine.memory.write_word(
                 self.cpu.sp,
                 word,
                 virtual=True
