@@ -140,7 +140,14 @@ class INC(instruction.Instruction):
         super().__init__(b'\x24', 'INC')
 
     def execute(self, virtual_machine):
-        pass
+        word = int.from_bytes(
+            virtual_machine.stack_pop(), byteorder=constants.BYTE_ORDER
+        )
+        word += 1
+
+        virtual_machine.stack_push(
+            word.to_bytes(constants.WORD_SIZE, byteorder=constants.BYTE_ORDER)
+        )
 
 
 class MUL(instruction.BinaryOperation):
