@@ -164,8 +164,8 @@ class MachineFrame:
         self.update()
 
     def run(self):
-        self.rm.run(self.vm_id)
-        self.update()
+        while self.vm.running:
+            self.step()
 
     def update(self):
         self.output()
