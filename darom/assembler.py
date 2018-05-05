@@ -218,21 +218,22 @@ class Assembler():
             )
         )
 
-    def assemble(self, file):
-        self._file_name = file.name
-        program = yacc.parse(file.read(), lexer=self._lexer)
+    def assemble_from_data(self, data):
+        program = yacc.parse(data, lexer=self._lexer)
 
         offset = 0
 
         for instr in program.code:
             if isinstance(instr, Label):
                 self._labels[instr.label] = offset
+
             offset += instr.length
 
         offset = 0
 
         for instr in program.code:
             offset += instr.length
+
             if instr.takes_arg and isinstance(instr.arg, str):
                 if instr.arg.startswith('@'):
                     label_reference = instr.arg[1:]
@@ -246,4 +247,10 @@ class Assembler():
                         byteorder=constants.BYTE_ORDER,
                         signed=True
                     )
+
         return program
+
+    def assemble(self, file):
+        self._file_name = file.name
+
+        return self.assemble_from_data(file.read())
