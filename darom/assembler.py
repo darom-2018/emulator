@@ -35,7 +35,7 @@ class Assembler():
         self._labels = {}
         self._lexer = lex.lex(module=self)
         self._lexpos = 0
-        self._parser = yacc.yacc(module=self)
+        self._parser = yacc.yacc(module=self, errorlog=yacc.NullLogger())
         self._file_name = None
 
     # Lexer
