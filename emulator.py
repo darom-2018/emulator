@@ -23,7 +23,9 @@ import tkinter
 from tkinter import filedialog
 
 from darom.assembler import Assembler
+from darom.devices import StorageDevice
 from darom.real_machine import RealMachine
+
 from gui import real_machine as rm_gui
 from gui import virtual_machine as vm_gui
 
@@ -39,7 +41,9 @@ def start_virtual_machine(window, real_machine_gui, real_machine):
     program_file.close()
     program_file = open(program_file.name, 'r')
 
-    real_machine.load(Assembler(real_machine.cpu).assemble(program_file))
+    real_machine.add_storage_device(StorageDevice.from_file(program_file))
+
+    raise NotImplementedError('Storage devices not yet supported')
 
     virtual_machine_gui = vm_gui.MachineFrame(
         window,
@@ -53,16 +57,24 @@ def start_virtual_machine(window, real_machine_gui, real_machine):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('files', nargs='*', type=open, metavar='FILE')
+    parser.add_argument('programs', nargs='*', metavar='PROGRAM')
     parser.add_argument('--cli', action='store_true')
+    parser.add_argument('--storage-device', type=open)
 
     args = parser.parse_args()
     real_machine = RealMachine()
 
     if args.cli:
-        for file, i in zip(args.files, range(len(args.files))):
-            print('Loading {}'.format(file.name))
-            real_machine.load(Assembler(real_machine.cpu).assemble(file))
+        if not args.storage_device:
+            print('No storage device specified, nothing to do')
+            return
+
+        real_machine.add_storage_device(StorageDevice.from_file(args.storage_device))
+
+        for i, program in enumerate(args.programs):
+            print('Loading', program)
+            real_machine.load(program)
+            print('Running', program)
             real_machine.run(i)
     else:
         window = tkinter.Tk()

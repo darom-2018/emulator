@@ -22,8 +22,9 @@ from darom import exceptions
 from darom import instructions
 from darom import interrupt_handlers
 from darom import util
+from darom.assembler import Assembler
 from darom.channel_device import ChannelDevice
-from darom.devices import InputDevice, OutputDevice, LedDevice
+from darom.devices import InputDevice, OutputDevice, LedDevice, StorageDevice
 from darom.instruction import Instruction, IOInstruction
 from darom.memory import Memory
 from darom.semaphore import Semaphore
@@ -93,6 +94,7 @@ class RealMachine:
         self._input_device = InputDevice()
         self._output_device = OutputDevice()
         self._led_device = LedDevice()
+        self._storage_devices = []
 
     @property
     def cpu(self):
@@ -138,8 +140,27 @@ class RealMachine:
     def led_device(self):
         return self._led_device
 
+    def add_storage_device(self, storage_device):
+        print(
+            'Adding storage device with programs: {}'.format(
+                list(storage_device.programs.keys())
+            )
+        )
+
+        self._storage_devices.append(storage_device)
+
     def load(self, program):
+        # TODO: This really doesn’t belong here.
         self.cpu.reset_registers()
+
+        program_text = None
+
+        for storage_device in self._storage_devices:
+            program_text = storage_device.programs.get(program.upper())
+            if program_text is not None:
+                break
+
+        program = Assembler(self.cpu).assemble_from_data(program_text)
 
         data_size, code_size = program.size()
         page_count = util.to_page_count(data_size + code_size)
