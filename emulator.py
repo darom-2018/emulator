@@ -23,7 +23,10 @@ import tkinter
 from tkinter import filedialog
 
 from darom.assembler import Assembler
+<<<<<<< HEAD
 from darom.devices import StorageDevice
+from darom.kernel import Kernel
+from darom.process import StartStop
 from darom.real_machine import RealMachine
 
 from gui import real_machine as rm_gui
@@ -95,6 +98,11 @@ def main():
 
     args = parser.parse_args()
     real_machine = RealMachine()
+    kernel = Kernel(real_machine)
+    StartStop(kernel)
+    kernel.planner()
+
+    print(kernel)
 
     if args.cli:
         if not args.storage_device:
