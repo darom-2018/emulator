@@ -1,3 +1,5 @@
+import pdb
+
 from darom.resource import Resource, ResourceRequest
 from darom.process import Status
 
@@ -8,6 +10,9 @@ class Kernel:
         self._run_proc = None
         self._resources = []
         self._rm = rm
+        self._rm._kernel = self
+
+        self._call_planner = True
 
     def __str__(self):
         str = '-----------------------Kernel--------------------\n'
@@ -54,11 +59,20 @@ class Kernel:
                 self._ready_procs.remove(p)
 
     def planner(self):
-        self.remove_blocked_processes()
-        if self._ready_procs:
-            p = self._ready_procs[0]
-            self._run_proc = p
-            p.run()
+        self._planner_works = True
+        while self._call_planner:
+            self._call_planner = False
+            self.remove_blocked_processes()
+            if self._ready_procs:
+                p = self._ready_procs[0]
+                self._run_proc = p
+                p.run()
+        self._planner_works = False
+
+    def plan(self):
+        self._call_planner = True
+        if not self._planner_works:
+            self.planner()
 
     def distributor(self):
         for res in self._resources:
@@ -67,7 +81,7 @@ class Kernel:
                     req.proc.owned_res.extend(res.get_elements(req.amount))
                     req.proc.unblock()
                     self._ready_procs.append(req.proc)
-        self.planner()
+        self.plan()
 
 
     def create_process(self, process):
@@ -103,11 +117,9 @@ class Kernel:
         self._run_proc = None
 
         self.distributor()
-        # self.planner()
 
     def release_res(self, res_name, elems):
         res = self._find_res_by_name(res_name)
         res.elements.extend(elems)
 
         self.distributor()
-        # self.planner()

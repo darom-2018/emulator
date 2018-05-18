@@ -24,7 +24,6 @@ from tkinter import filedialog
 
 from darom import resource
 from darom.assembler import Assembler
-<<<<<<< HEAD
 from darom.devices import StorageDevice
 from darom.kernel import Kernel
 from darom.process import StartStop, Status
@@ -101,8 +100,7 @@ def main():
     real_machine = RealMachine()
     kernel = Kernel(real_machine)
     StartStop(kernel)
-
-    print(kernel)
+    kernel.planner()
 
     if args.cli:
         if not args.storage_device:
@@ -116,6 +114,17 @@ def main():
         for i, program in enumerate(args.programs):
             print('Loading', program)
             real_machine.load(program)
+            kernel.release_res(
+                resource.TASK_IN_USER_MEMORY,
+                [
+                    resource.ResourceElement(
+                        name=resource.TASK_IN_USER_MEMORY, data=[i]
+                    )
+                ]
+            )
+            # kernel.release_res(resource.OS_END, [1])
+            # kernel.planner()
+            # real_machine.run(i)
             print('Running', program)
             while real_machine.current_vm.running:
                 if args.input:
@@ -147,7 +156,7 @@ def main():
         load_program_button.pack()
 
         load_program_button = tkinter.Button(
-            window, text='Release OS_END', command=lambda: kernel.release_res(resource.OS_END, [1]))
+            window, text='Release TASK IN UM', command=lambda: kernel.release_res(resource.TASK_IN_USER_MEMORY, [1]))
         load_program_button.pack(side='bottom')
 
         kernel.planner()

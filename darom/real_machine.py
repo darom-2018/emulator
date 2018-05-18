@@ -16,11 +16,13 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 import inspect
+import pdb
 
 from darom import constants
 from darom import exceptions
 from darom import instructions
 from darom import interrupt_handlers
+from darom import resource
 from darom import util
 from darom.assembler import Assembler
 from darom.channel_device import ChannelDevice
@@ -86,6 +88,7 @@ class RealMachine:
     def __init__(self):
         self._cpu = HLP()
         self._user_memory = Memory(70, self.cpu)
+        self._kernel = None
         self._shared_memory = self._user_memory.allocate(2)
         self._semaphore = Semaphore(1)
         self._vms = []
@@ -234,6 +237,17 @@ class RealMachine:
             )
         )
 
+    def _release_interrupt(self):
+        self._kernel.release_res(
+            resource.INTERRUPT,
+            [
+                resource.ResourceElement(
+                    name=resource.INTERRUPT,
+                    data={'si':self._cpu.si, 'pi':self._cpu.pi, 'ti':self._cpu.ti}
+                )
+            ]
+        )
+
     def test(self):
         pi_handlers = [
             None,
@@ -258,12 +272,15 @@ class RealMachine:
 
         if (self._cpu.pi) > 0:
             pi_handlers[self._cpu.pi](self)
+            self._release_interrupt()
             self._cpu.pi = 0
         if (self._cpu.si) > 0:
             self._dump_registers()
             si_handlers[self._cpu.si](self)
+            self._release_interrupt()
             self._cpu.si = 0
         if self._cpu.ti <= 0:
+            self._release_interrupt()
             interrupt_handlers.timeout(self)
 
     def step(self, vm_id, verbose=1):

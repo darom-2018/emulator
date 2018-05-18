@@ -40,6 +40,9 @@ class Process:
         str = "name: {:<20} {:<20} priority: {}".format(self._name, self._status, self._priority)
         return str
 
+    def _change_ic(self, ic):
+        self._ic = ic
+
     @property
     def created_res(self):
         return self._created_res
@@ -89,10 +92,14 @@ class Process:
         while self._status == Status.RUN:
             instr = self._instructions[self._ic]
             self._ic += 1
-            print("{:<15} : {}({})".format(self.__class__.__name__, instr[0].__name__, *instr[1]))
-            instr[0](*instr[1])
+            if instr[1]:
+                print("{:<15} : {}({})".format(self.__class__.__name__, instr[0].__name__, *instr[1]))
+                instr[0](*instr[1])
+            else:
+                print("{:<15} : {}()".format(self.__class__.__name__, instr[0].__name__))
+                instr[0]()
 
-        self._kernel.planner()
+        # self._kernel.planner()
 
     def unblock(self):
         if self._status == Status.BLOCKS:
@@ -134,6 +141,17 @@ class Main(Process):
         super().__init__(kernel=kernel, priority=priority, name="Main")
 
         self._instructions.append((self._kernel.request_res, [resource.TASK_IN_USER_MEMORY, 1]))
+        self._instructions.append((self.inspect_resource, []))
+        self._instructions.append((self._change_ic, [0]))
+
+    def inspect_resource(self):
+        task_in_memory_res = [res for res in self._owned_res if res.name == resource.TASK_IN_USER_MEMORY]
+        for res in task_in_memory_res:
+            if res.data:
+                print("creating job governor")
+                self._kernel.create_process(JobGovernor(kernel=self._kernel, priority=60, vm_id=res.data[0]))
+            else:
+                print("destroying JobGovernor")
 
 
 class Loader(Process):
@@ -148,6 +166,17 @@ class Interrupt(Process):
         super().__init__(kernel=kernel, priority=priority, name="Interrupt")
 
         self._instructions.append((self._kernel.request_res, [resource.INTERRUPT, 1] ))
+        self._instructions.append((self._identify_interrupt, []))
+        self._instructions.append((self._change_ic, [0]))
+
+    def _identify_interrupt(self):
+        interrupt = self._owned_res[1].data
+        if interrupt.get('ti') == 0:
+            print("Time interrupt")
+            self._kernel.release_res(resource.OS_END, [1])
+        elif interrupt.get('si') == 1:
+            print("VMEnd")
+            self._kernel.release_res(resource.OS_END, [1])
 
 
 class ChannelDevice(Process):
@@ -158,17 +187,24 @@ class ChannelDevice(Process):
 
 
 class JobGovernor(Process):
-    def __init__(self, kernel, priority):
+    def __init__(self, kernel, priority, vm_id):
         super().__init__(kernel=kernel, priority=priority, name="JobGovernor")
 
+        self._instructions.append(
+            (self._kernel.create_process, [VirtualMachine(kernel=self._kernel, priority=40, vm_id=vm_id)])
+        )
         self._instructions.append((self._kernel.request_res, [resource.FROM_INTERRUPT, 1] ))
 
 
 class VirtualMachine(Process):
-    def __init__(self, kernel, priority):
+    def __init__(self, kernel, priority, vm_id):
         super().__init__(kernel=kernel, priority=priority, name="VirtualMachine")
 
-        self._instructions.append((print, ["VirtualMachine"] ))
+        self._instructions.append((self._kernel._rm.run, [vm_id]))
+        self._instructions.append((self._set_status, [Status.BLOCK]))
+
+    def _set_status(self, status):
+        self.status = status
 
 
 class Idle(Process):
