@@ -22,11 +22,12 @@ import sys
 import tkinter
 from tkinter import filedialog
 
+from darom import resource
 from darom.assembler import Assembler
 <<<<<<< HEAD
 from darom.devices import StorageDevice
 from darom.kernel import Kernel
-from darom.process import StartStop
+from darom.process import StartStop, Status
 from darom.real_machine import RealMachine
 
 from gui import real_machine as rm_gui
@@ -100,7 +101,6 @@ def main():
     real_machine = RealMachine()
     kernel = Kernel(real_machine)
     StartStop(kernel)
-    kernel.planner()
 
     print(kernel)
 
@@ -141,6 +141,16 @@ def main():
             window, text='Load a program', command=lambda: select_program(
                 window, real_machine_gui, real_machine))
         program_load_button.pack(side='bottom')
+
+        load_program_button = tkinter.Button(
+            window, text='Dump kernel', command=lambda: print(kernel))
+        load_program_button.pack()
+
+        load_program_button = tkinter.Button(
+            window, text='Release OS_END', command=lambda: kernel.release_res(resource.OS_END, [1]))
+        load_program_button.pack(side='bottom')
+
+        kernel.planner()
 
         window.mainloop()
 

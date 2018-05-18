@@ -1,4 +1,5 @@
-from darom.resource import Resource
+from darom.resource import Resource, ResourceRequest
+from darom.process import Status
 
 class Kernel:
     def __init__(self, rm):
@@ -40,11 +41,34 @@ class Kernel:
     def run_proc(self, run_proc):
         self._run_proc = run_proc
 
+    def _find_res_by_name(self, res_name):
+        for res in self._resources:
+            if res.name == res_name:
+                return res
+        raise Exception("Resource '{}' not found!".format(res_name))
+
+    def remove_blocked_processes(self):
+        for p in self._ready_procs:
+            st = p.status
+            if st == Status.BLOCK or st == Status.BLOCKS or st == Status.READYS:
+                self._ready_procs.remove(p)
+
     def planner(self):
-        p = self._ready_procs[0]
-        self._ready_procs.remove(p)
-        self._run_proc = p
-        p.run()
+        self.remove_blocked_processes()
+        if self._ready_procs:
+            p = self._ready_procs[0]
+            self._run_proc = p
+            p.run()
+
+    def distributor(self):
+        for res in self._resources:
+            for req in res._wait_list:
+                if req.amount <= len(res.elements):
+                    req.proc.owned_res.extend(res.get_elements(req.amount))
+                    req.proc.unblock()
+                    self._ready_procs.append(req.proc)
+        self.planner()
+
 
     def create_process(self, process):
         self._run_proc.children.append(process)
@@ -53,7 +77,6 @@ class Kernel:
         self._processes.append(process)
         self._ready_procs.append(process)
         self._ready_procs.sort(key=lambda p: p.priority, reverse=True)
-        print()
 
     def destroy_process(self, process):
         pass
@@ -73,10 +96,18 @@ class Kernel:
     def destroy_res(self, res_name):
         pass
 
-    def request_res(self, res_name):
-        res = list(filter(lambda r: r.name == res_name, self._resources))[0]
-        res.wait_list.append(self._run_proc)
+    def request_res(self, res_name, amount):
+        res = self._find_res_by_name(res_name)
+        res.wait_list.append(ResourceRequest(self._run_proc, amount))
+        self._run_proc.status = Status.BLOCK
         self._run_proc = None
 
-    def release_res(self, res_name):
-        pass
+        self.distributor()
+        # self.planner()
+
+    def release_res(self, res_name, elems):
+        res = self._find_res_by_name(res_name)
+        res.elements.extend(elems)
+
+        self.distributor()
+        # self.planner()

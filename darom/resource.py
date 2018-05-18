@@ -1,6 +1,15 @@
+import random
+
 OS_END = "OSEnd"
 FROM_UI = "FromUI"
-MEMORY = "Memory"
+USER_MEMORY = "Memory"
+TASK_IN_USER_MEMORY = "TaskInUserMemory"
+INTERRUPT = "Interrupt"
+FROM_INTERRUPT = "FromInterrupt"
+CHANNEL_DEVICE = "ChannelDevice"
+DATA_TRANSFER = "DataTransfer"
+FROM_CHANNEL_DEVICE = "FromChannelDevice"
+
 
 class Resource:
     '''
@@ -16,8 +25,8 @@ class Resource:
         self._wait_list = []
 
     def __str__(self):
-        str = "name: {}, id: {}, parent: {}, wait_list_len: {}, elements_len: {}\n".format(
-            self._name, self._id, self._parent.name, len(self._wait_list), len(self._elements)
+        str = "name: {:<20} {:<20} wait_list_len: {:<5} elements_len: {:<5}".format(
+            self._name, self._parent.name, len(self._wait_list), len(self._elements)
         )
         return str
 
@@ -40,3 +49,27 @@ class Resource:
     @property
     def name(self):
         return self._name
+
+    def get_elements(self, amount):
+        elems = random.sample(self._elements, amount)
+        for e in elems:
+            self._elements.remove(e)
+        return elems
+
+# Klase, resurso prasymui aprasyti
+class ResourceRequest:
+    '''
+    proc - resurso prasantis procesas
+    amount - prasomu resurso elementu skaicius
+    '''
+    def __init__(self, proc, amount):
+        self._proc = proc
+        self._amount = amount
+
+    @property
+    def proc(self):
+        return self._proc
+
+    @property
+    def amount(self):
+        return self._amount
