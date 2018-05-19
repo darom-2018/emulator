@@ -122,15 +122,15 @@ def main():
                     )
                 ]
             )
-            # kernel.release_res(resource.OS_END, [1])
-            # kernel.planner()
-            # real_machine.run(i)
+            print(kernel._ready_procs)
             print('Running', program)
             while real_machine.current_vm.running:
                 if args.input:
                     real_machine.input_device.input = args.input
                 real_machine.input_device.input = args.input
                 real_machine.step(i)
+            print("Shut down signal")
+            kernel.release_res(resource.OS_END, [1])
     else:
         window = tkinter.Tk()
         window.title('Emulator')

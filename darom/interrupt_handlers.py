@@ -41,7 +41,7 @@ def stack_overflow(real_machine):
 
 def halt(real_machine):
     real_machine.current_vm.cpu.halt()
-    print('Halted')
+    # print('Halted')
 
 
 def in_(real_machine):
@@ -178,5 +178,4 @@ def led(real_machine):
 
 
 def timeout(real_machine):
-    print('Timeout')
     real_machine.current_vm.cpu.halt()

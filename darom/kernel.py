@@ -1,5 +1,8 @@
 import pdb
+import random
 
+from darom import process
+from darom import resource
 from darom.resource import Resource, ResourceRequest
 from darom.process import Status
 
@@ -52,6 +55,21 @@ class Kernel:
                 return res
         raise Exception("Resource '{}' not found!".format(res_name))
 
+    def _print_process_transition(self, old_proc):
+        # print('\t', [proc.name for proc in self._ready_procs])
+        print("{:<15} -> {:>15}".format(old_proc.name if old_proc else "", self._run_proc.name))
+
+    def _select_process(self):
+        self._ready_procs.sort(key=lambda p: p.priority, reverse=True)
+        max_p = self._ready_procs[0].priority
+        candidates = [proc for proc in self._ready_procs if proc.priority == max_p]
+        return random.choice(candidates)
+
+    def _add_ready_processes(self):
+        for p in self._processes:
+            if p.status == Status.READY and p not in self._ready_procs:
+                self._ready_procs.append(p)
+
     def remove_blocked_processes(self):
         for p in self._ready_procs:
             st = p.status
@@ -63,10 +81,16 @@ class Kernel:
         while self._call_planner:
             self._call_planner = False
             self.remove_blocked_processes()
+            self._add_ready_processes()
+            old_proc = self._run_proc
             if self._ready_procs:
-                p = self._ready_procs[0]
+                p = self._select_process()
                 self._run_proc = p
+                self._print_process_transition(old_proc)
                 p.run()
+            else:
+                self._run_proc = process.Process(name='IDLE', priority=10)
+                self._print_process_transition(old_proc)
         self._planner_works = False
 
     def plan(self):
@@ -77,20 +101,20 @@ class Kernel:
     def distributor(self):
         for res in self._resources:
             for req in res._wait_list:
-                if req.amount <= len(res.elements):
-                    req.proc.owned_res.extend(res.get_elements(req.amount))
+                if res.elements_available(req.amount, req.cond):
+                    req.proc.owned_res.extend(res.get_elements(req.amount, req.cond))
                     req.proc.unblock()
-                    self._ready_procs.append(req.proc)
+                    # self._ready_procs.append(req.proc)
         self.plan()
 
 
     def create_process(self, process):
+        print("{:<15} : create_process({})".format(self._run_proc.name, process.name))
         self._run_proc.children.append(process)
         process.kernel = self
         process.parent = self.run_proc
         self._processes.append(process)
         self._ready_procs.append(process)
-        self._ready_procs.sort(key=lambda p: p.priority, reverse=True)
 
     def destroy_process(self, process):
         pass
@@ -110,15 +134,16 @@ class Kernel:
     def destroy_res(self, res_name):
         pass
 
-    def request_res(self, res_name, amount):
+    def request_res(self, res_name, amount, cond=None):
+        print("{:<15} : request_res({})".format(self._run_proc.name, res_name))
         res = self._find_res_by_name(res_name)
-        res.wait_list.append(ResourceRequest(self._run_proc, amount))
+        res.wait_list.append(ResourceRequest(self._run_proc, amount, cond))
         self._run_proc.status = Status.BLOCK
-        self._run_proc = None
 
         self.distributor()
 
     def release_res(self, res_name, elems):
+        print("{:<15} : release_res({}, {})".format(self._run_proc.name, res_name, elems))
         res = self._find_res_by_name(res_name)
         res.elements.extend(elems)
 

@@ -25,9 +25,14 @@ class Resource:
         self._wait_list = []
 
     def __str__(self):
-        str = "name: {:<20} {:<20} wait_list_len: {:<5} elements_len: {:<5}".format(
-            self._name, self._parent.name, len(self._wait_list), len(self._elements)
-        )
+        str = "---------------RESOURCE {} --------------\n".format(self._name)
+        str += "waiting proceses: \n"
+        for req in self._wait_list:
+            str += "{:>20}\n".format(req.proc.name)
+        str += "available elements:\n"
+        for elem in self._elements:
+            str += "\t{}\n".format(elem)
+        str += "----------------------------------------\n"
         return str
 
     @property
@@ -50,8 +55,21 @@ class Resource:
     def name(self):
         return self._name
 
-    def get_elements(self, amount):
-        elems = random.sample(self._elements, amount)
+    def elements_available(self, amount, cond):
+        if cond:
+            elems = [elem for elem in self._elements if cond(elem)]
+        else:
+            elems = self._elements
+        if len(elems) >= amount:
+            return True
+        return False
+
+    def get_elements(self, amount, cond):
+        if cond:
+            candidate = [elem for elem in self._elements if cond(elem)]
+        else:
+            candidate = self._elements
+        elems = random.sample(candidate, amount)
         for e in elems:
             self._elements.remove(e)
         return elems
@@ -61,10 +79,12 @@ class ResourceRequest:
     '''
     proc - resurso prasantis procesas
     amount - prasomu resurso elementu skaicius
+    cond - funckija, leidzianti atlikti papildomus resurso identifikavimo veiksmus
     '''
-    def __init__(self, proc, amount):
+    def __init__(self, proc, amount, cond):
         self._proc = proc
         self._amount = amount
+        self._cond = cond
 
     @property
     def proc(self):
@@ -74,11 +94,18 @@ class ResourceRequest:
     def amount(self):
         return self._amount
 
+    @property
+    def cond(self):
+        return self._cond
+
 
 class ResourceElement:
     def __init__(self, name, data=[]):
         self._name = name
         self._data = data
+
+    def __repr__(self):
+        return "{}: {}".format(self._name, self._data)
 
     @property
     def name(self):

@@ -237,18 +237,18 @@ class RealMachine:
             )
         )
 
-    def _release_interrupt(self):
+    def _release_interrupt(self, vm_id):
         self._kernel.release_res(
             resource.INTERRUPT,
             [
                 resource.ResourceElement(
                     name=resource.INTERRUPT,
-                    data={'si':self._cpu.si, 'pi':self._cpu.pi, 'ti':self._cpu.ti}
+                    data={'si':self._cpu.si, 'pi':self._cpu.pi, 'ti':self._cpu.ti, 'vm_id': vm_id}
                 )
             ]
         )
 
-    def test(self):
+    def test(self, vm_id):
         pi_handlers = [
             None,
             interrupt_handlers.invalid_instruction_code,
@@ -272,15 +272,15 @@ class RealMachine:
 
         if (self._cpu.pi) > 0:
             pi_handlers[self._cpu.pi](self)
-            self._release_interrupt()
+            self._release_interrupt(vm_id)
             self._cpu.pi = 0
         if (self._cpu.si) > 0:
-            self._dump_registers()
+            # self._dump_registers()
             si_handlers[self._cpu.si](self)
-            self._release_interrupt()
+            self._release_interrupt(vm_id)
             self._cpu.si = 0
         if self._cpu.ti <= 0:
-            self._release_interrupt()
+            self._release_interrupt(vm_id)
             interrupt_handlers.timeout(self)
 
     def step(self, vm_id, verbose=1):
@@ -318,6 +318,7 @@ class RealMachine:
         except exceptions.PageFaultError:
             self._cpu.pi = 3
 
+<<<<<<< HEAD
         if verbose > 1:
             print('User memory: ')
             print(self._user_memory.dump())
@@ -325,3 +326,6 @@ class RealMachine:
             print(self._shared_memory)
 
         self.test()
+=======
+        self.test(vm_id)
+>>>>>>> lygiagreciu procesu veikimas

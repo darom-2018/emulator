@@ -20,12 +20,12 @@ class Process:
     owned_res - procesui kurimo metu paduoti resursai
     name - proceso isorinis vardas
     '''
-    def __init__(self, priority, name=None, parent=None, owned_res=[], kernel=None):
+    def __init__(self, priority, name=None, parent=None, owned_res=None, kernel=None):
         # self._process_list = kernel.ready_procs
         self._id = id(self)
         self._created_res = []
         self._status = Status.READY
-        self._owned_res = owned_res
+        self._owned_res = [] if not owned_res else owned_res
         self._priority = priority
         self._parent = parent
         self._children = []
@@ -93,10 +93,10 @@ class Process:
             instr = self._instructions[self._ic]
             self._ic += 1
             if instr[1]:
-                print("{:<15} : {}({})".format(self.__class__.__name__, instr[0].__name__, *instr[1]))
+                # print("{:<15} : {}({})".format(self.__class__.__name__, instr[0].__name__, *instr[1]))
                 instr[0](*instr[1])
             else:
-                print("{:<15} : {}()".format(self.__class__.__name__, instr[0].__name__))
+                # print("{:<15} : {}()".format(self.__class__.__name__, instr[0].__name__))
                 instr[0]()
 
         # self._kernel.planner()
@@ -133,6 +133,7 @@ class StartStop(Process):
         self._instructions.append((self.shutdown, [1]))
 
     def shutdown(self, arg):
+        print("Shutting down OS")
         sys.exit(1)
         raise Exception("System shutdown")
 
@@ -145,13 +146,14 @@ class Main(Process):
         self._instructions.append((self._change_ic, [0]))
 
     def inspect_resource(self):
-        task_in_memory_res = [res for res in self._owned_res if res.name == resource.TASK_IN_USER_MEMORY]
-        for res in task_in_memory_res:
-            if res.data:
-                print("creating job governor")
-                self._kernel.create_process(JobGovernor(kernel=self._kernel, priority=60, vm_id=res.data[0]))
-            else:
-                print("destroying JobGovernor")
+        res = self._owned_res[-1]
+        # task_in_memory_res = [res for res in self._owned_res if res.name == resource.TASK_IN_USER_MEMORY]
+        # for res in task_in_memory_res:
+        if res.data:
+            self._kernel.create_process(JobGovernor(kernel=self._kernel, priority=60, vm_id=res.data[0]))
+            self._owned_res.remove(res)
+        else:
+            print("destroying JobGovernor")
 
 
 class Loader(Process):
@@ -170,13 +172,28 @@ class Interrupt(Process):
         self._instructions.append((self._change_ic, [0]))
 
     def _identify_interrupt(self):
-        interrupt = self._owned_res[1].data
+        interrupt = self._owned_res[-1].data
+        vm_id = interrupt.get('vm_id')
         if interrupt.get('ti') == 0:
-            print("Time interrupt")
-            self._kernel.release_res(resource.OS_END, [1])
-        elif interrupt.get('si') == 1:
-            print("VMEnd")
-            self._kernel.release_res(resource.OS_END, [1])
+            self._release_interrupt_resource(vm_id, 'timeout')
+        elif interrupt.get('si') > 0:
+            if interrupt.get('si') == 1:
+                self._release_interrupt_resource(vm_id, 'halt')
+            else:
+                self._release_interrupt_resource(vm_id, 'io')
+
+    def _release_interrupt_resource(self, vm_id, type):
+        self._kernel.release_res(
+            resource.FROM_INTERRUPT,
+            [resource.ResourceElement(
+                    resource.FROM_INTERRUPT,
+                    data={
+                        "vm_id": vm_id,
+                        "type": type
+                    }
+                )
+            ]
+        )
 
 
 class ChannelDevice(Process):
@@ -188,17 +205,36 @@ class ChannelDevice(Process):
 
 class JobGovernor(Process):
     def __init__(self, kernel, priority, vm_id):
-        super().__init__(kernel=kernel, priority=priority, name="JobGovernor")
+        super().__init__(kernel=kernel, priority=priority, name="JobGovernor {}".format(vm_id))
 
         self._instructions.append(
             (self._kernel.create_process, [VirtualMachine(kernel=self._kernel, priority=40, vm_id=vm_id)])
         )
-        self._instructions.append((self._kernel.request_res, [resource.FROM_INTERRUPT, 1] ))
+        self._instructions.append(
+            (
+                self._kernel.request_res,
+                [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm_id)]
+            )
+        )
+        self._instructions.append((self._inspect_from_interrupt, []))
+        self._instructions.append((self._change_ic, [1]))
+
+    def _check_vm_id(self, vm_id):
+        return lambda res_element: res_element.data.get("vm_id") == vm_id
+
+    def _inspect_from_interrupt(self):
+        if self._owned_res[-1].data.get('type') == 'timeout':
+            print("\ttimeout")
+            self._kernel._rm._cpu.reset_registers()
+            self._kernel._rm.current_vm._cpu._halted = False
+            vm = self._children[-1]
+            vm._change_ic(0)
+            vm._set_status(Status.READY)
 
 
 class VirtualMachine(Process):
     def __init__(self, kernel, priority, vm_id):
-        super().__init__(kernel=kernel, priority=priority, name="VirtualMachine")
+        super().__init__(kernel=kernel, priority=priority, name="VirtualMachine {}".format(vm_id))
 
         self._instructions.append((self._kernel._rm.run, [vm_id]))
         self._instructions.append((self._set_status, [Status.BLOCK]))
