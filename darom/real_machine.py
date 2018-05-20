@@ -240,12 +240,7 @@ class RealMachine:
     def _release_interrupt(self, vm_id):
         self._kernel.release_res(
             resource.INTERRUPT,
-            [
-                resource.ResourceElement(
-                    name=resource.INTERRUPT,
-                    data={'si':self._cpu.si, 'pi':self._cpu.pi, 'ti':self._cpu.ti, 'vm_id': vm_id}
-                )
-            ]
+            [{'si':self._cpu.si, 'pi':self._cpu.pi, 'ti':self._cpu.ti, 'vm_id': vm_id}]
         )
 
     def test(self, vm_id):
@@ -318,14 +313,10 @@ class RealMachine:
         except exceptions.PageFaultError:
             self._cpu.pi = 3
 
-<<<<<<< HEAD
         if verbose > 1:
             print('User memory: ')
             print(self._user_memory.dump())
             print('Shared memory: ')
             print(self._shared_memory)
 
-        self.test()
-=======
         self.test(vm_id)
->>>>>>> lygiagreciu procesu veikimas

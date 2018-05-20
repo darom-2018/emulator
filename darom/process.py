@@ -109,7 +109,7 @@ class Process:
 
 class StartStop(Process):
     def __init__(self, kernel):
-        super().__init__(kernel=kernel, priority=50, name='StartStop')
+        super().__init__(kernel=kernel, priority=5, name='StartStop')
         self._kernel.processes.append(self)
         self._kernel.ready_procs.append(self)
 
@@ -129,7 +129,7 @@ class StartStop(Process):
         self._instructions.append((self._kernel.create_process, [ChannelDevice(kernel=self._kernel, priority=80)]    ))
         # self._instructions.append((self._kernel.create_process, [Idle(kernel=self._kernel, priority=80)]             ))
         self._instructions.append((self._kernel.request_res, [resource.OS_END, 1]               ))
-
+        self._instructions.append((self._kernel.destroy_process, [self]))
         self._instructions.append((self.shutdown, [1]))
 
     def shutdown(self, arg):
@@ -147,13 +147,11 @@ class Main(Process):
 
     def inspect_resource(self):
         res = self._owned_res[-1]
-        # task_in_memory_res = [res for res in self._owned_res if res.name == resource.TASK_IN_USER_MEMORY]
-        # for res in task_in_memory_res:
-        if res.data:
-            self._kernel.create_process(JobGovernor(kernel=self._kernel, priority=60, vm_id=res.data[0]))
+        if not isinstance(res.data, JobGovernor):
+            self._kernel.create_process(JobGovernor(kernel=self._kernel, priority=60, vm_id=res.data))
             self._owned_res.remove(res)
         else:
-            print("destroying JobGovernor")
+            self._kernel.destroy_process(res.data)
 
 
 class Loader(Process):
@@ -185,14 +183,7 @@ class Interrupt(Process):
     def _release_interrupt_resource(self, vm_id, type):
         self._kernel.release_res(
             resource.FROM_INTERRUPT,
-            [resource.ResourceElement(
-                    resource.FROM_INTERRUPT,
-                    data={
-                        "vm_id": vm_id,
-                        "type": type
-                    }
-                )
-            ]
+            [{"vm_id": vm_id, "type": type}]
         )
 
 
@@ -211,10 +202,7 @@ class JobGovernor(Process):
             (self._kernel.create_process, [VirtualMachine(kernel=self._kernel, priority=40, vm_id=vm_id)])
         )
         self._instructions.append(
-            (
-                self._kernel.request_res,
-                [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm_id)]
-            )
+            (self._kernel.request_res, [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm_id)])
         )
         self._instructions.append((self._inspect_from_interrupt, []))
         self._instructions.append((self._change_ic, [1]))
@@ -223,13 +211,16 @@ class JobGovernor(Process):
         return lambda res_element: res_element.data.get("vm_id") == vm_id
 
     def _inspect_from_interrupt(self):
-        if self._owned_res[-1].data.get('type') == 'timeout':
-            print("\ttimeout")
+        from_interrupt = self._owned_res[-1]
+        interrupt_type = from_interrupt.data.get('type')
+        vm = self._children[-1]
+        if interrupt_type == 'timeout':
             self._kernel._rm._cpu.reset_registers()
             self._kernel._rm.current_vm._cpu._halted = False
-            vm = self._children[-1]
             vm._change_ic(0)
             vm._set_status(Status.READY)
+        elif interrupt_type == 'halt':
+            self._kernel.release_res(resource.TASK_IN_USER_MEMORY, [self])
 
 
 class VirtualMachine(Process):

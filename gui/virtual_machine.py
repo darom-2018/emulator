@@ -20,6 +20,9 @@ import enum
 import tkinter
 from tkinter import scrolledtext
 import struct
+import pdb
+
+from darom import resource
 from darom import constants
 from darom import util
 
@@ -164,8 +167,12 @@ class MachineFrame:
         self.update()
 
     def run(self):
-        while self.vm.running:
-            self.step()
+        self.rm._kernel.release_res(
+            resource.TASK_IN_USER_MEMORY,
+            [self.vm_id]
+        )
+        # while self.vm.running:
+        #     self.step()
 
     def update(self):
         self.output()

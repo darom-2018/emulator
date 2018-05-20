@@ -21,6 +21,7 @@ import argparse
 import sys
 import tkinter
 from tkinter import filedialog
+from threading import Thread
 
 from darom import resource
 from darom.assembler import Assembler
@@ -92,17 +93,18 @@ def add_storage_device(window, real_machine_gui, real_machine):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('programs', nargs='*', metavar='PROGRAM')
+    parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--cli', action='store_true')
     parser.add_argument('--storage-device', type=open)
     parser.add_argument('--input', action='store')
 
     args = parser.parse_args()
     real_machine = RealMachine()
-    kernel = Kernel(real_machine)
+    kernel = Kernel(real_machine, args.verbose)
     StartStop(kernel)
-    kernel.planner()
 
     if args.cli:
+        # Thread(name='gui', target=kernel.planner).start()
         if not args.storage_device:
             print('No storage device specified, nothing to do')
             return
@@ -114,12 +116,10 @@ def main():
         for i, program in enumerate(args.programs):
             print('Loading', program)
             real_machine.load(program)
-            kernel.release_res(
-                resource.TASK_IN_USER_MEMORY,
-                [
-                    resource.ResourceElement(
-                        name=resource.TASK_IN_USER_MEMORY, data=[i]
-                    )
+            kernel.planner(
+            init=[
+                lambda: kernel.release_res(resource.TASK_IN_USER_MEMORY, [i for i in range(len(args.files))]),
+                lambda: kernel.release_res(resource.OS_END, [1])
                 ]
             )
             print(kernel._ready_procs)
@@ -151,17 +151,15 @@ def main():
                 window, real_machine_gui, real_machine))
         program_load_button.pack(side='bottom')
 
-        load_program_button = tkinter.Button(
+        dump_kernel_button = tkinter.Button(
             window, text='Dump kernel', command=lambda: print(kernel))
-        load_program_button.pack()
+        dump_kernel_button.pack()
 
-        load_program_button = tkinter.Button(
-            window, text='Release TASK IN UM', command=lambda: kernel.release_res(resource.TASK_IN_USER_MEMORY, [1]))
-        load_program_button.pack(side='bottom')
+        # window.update()
+        kernel.planner(window)
 
-        kernel.planner()
-
-        window.mainloop()
+        # window.mainloop()
+        kernel.release_res(resource.OS_END, [1])
 
 
 if __name__ == '__main__':

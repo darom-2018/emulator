@@ -24,16 +24,16 @@ class Resource:
         self._elements = []
         self._wait_list = []
 
-    def __str__(self):
-        str = "---------------RESOURCE {} --------------\n".format(self._name)
-        str += "waiting proceses: \n"
-        for req in self._wait_list:
-            str += "{:>20}\n".format(req.proc.name)
-        str += "available elements:\n"
-        for elem in self._elements:
-            str += "\t{}\n".format(elem)
-        str += "----------------------------------------\n"
-        return str
+    # def __str__(self):
+    #     str = "---------------RESOURCE {} --------------\n".format(self._name)
+    #     str += "waiting proceses: \n"
+    #     for req in self._wait_list:
+    #         str += "{:>20}\n".format(req.proc.name)
+    #     str += "available elements:\n"
+    #     for elem in self._elements:
+    #         str += "\t{}\n".format(elem)
+    #     str += "----------------------------------------\n"
+    #     return str
 
     @property
     def parent(self):
@@ -100,7 +100,7 @@ class ResourceRequest:
 
 
 class ResourceElement:
-    def __init__(self, name, data=[]):
+    def __init__(self, name, data):
         self._name = name
         self._data = data
 
