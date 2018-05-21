@@ -271,12 +271,12 @@ class RealMachine:
         ]
 
         if (self._cpu.pi) > 0:
-            pi_handlers[self._cpu.pi](self)
+            # pi_handlers[self._cpu.pi](self)
             self._release_interrupt(vm_id)
             self._cpu.pi = 0
         if (self._cpu.si) > 0:
             # self._dump_registers()
-            si_handlers[self._cpu.si](self)
+            # si_handlers[self._cpu.si](self)
             self._release_interrupt(vm_id)
             self._cpu.si = 0
             interrupt_handlers.timeout(self)

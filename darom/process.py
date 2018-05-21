@@ -1,4 +1,5 @@
 from darom import resource
+from darom import interrupt_handlers
 
 import sys
 import time
@@ -179,19 +180,23 @@ class Interrupt(Process):
 
     def _identify_interrupt(self):
         interrupt = self._owned_res[-1].data
+        si, pi, ti = interrupt.get('si'), interrupt.get('pi'), interrupt.get('ti')
         vm_id = interrupt.get('vm_id')
-        if interrupt.get('ti') == 0:
+        if ti == 0:
             self._release_interrupt_resource(vm_id, 'timeout')
-        elif interrupt.get('si') > 0:
-            if interrupt.get('si') == 1:
+        elif si > 0:
+            if si == 1:
                 self._release_interrupt_resource(vm_id, 'halt')
             else:
-                self._release_interrupt_resource(vm_id, 'io')
+                self._release_interrupt_resource(vm_id, 'io', si)
+        elif pi > 0:
+            pass
 
-    def _release_interrupt_resource(self, vm_id, type):
+
+    def _release_interrupt_resource(self, vm_id, type, si=None):
         self._kernel.release_res(
             resource.FROM_INTERRUPT,
-            [{"vm_id": vm_id, "type": type}]
+            [{"vm_id": vm_id, "type": type, 'si': si}]
         )
 
 
@@ -199,12 +204,44 @@ class ChannelDevice(Process):
     def __init__(self, kernel, priority):
         super().__init__(kernel=kernel, priority=priority, name="ChannelDevice")
 
+        self._instructions.append((self._kernel.release_res, [resource.CHANNEL_DEVICE, []]))
         self._instructions.append((self._kernel.request_res, [resource.DATA_TRANSFER, 1] ))
+        self._instructions.append((self._transfer_data, []))
+        self._instructions.append((self._kernel.release_res, [resource.FROM_CHANNEL_DEVICE, [1]]))
+        self._instructions.append((self._change_ic, [1]))
+
+    def _transfer_data(self):
+        info = self._owned_res[-1].data
+        dest = info.get('dest')
+        if dest == 'led':
+            led_device = self._kernel._rm.led_device
+            led_device.rgb = info.get('rgb')
 
 
 class JobGovernor(Process):
     def __init__(self, kernel, priority, vm):
         super().__init__(kernel=kernel, priority=priority, name="JobGovernor {}".format(vm.get('vm_id')))
+
+        self._pi_handlers = [
+            None,
+            interrupt_handlers.invalid_instruction_code,
+            interrupt_handlers.invalid_operand,
+            interrupt_handlers.page_fault,
+            interrupt_handlers.stack_overflow
+        ]
+        self._si_handlers = [
+            None,
+            interrupt_handlers.halt,
+            interrupt_handlers.in_,
+            interrupt_handlers.ini,
+            interrupt_handlers.out,
+            interrupt_handlers.outi,
+            interrupt_handlers.shread,
+            interrupt_handlers.shwrite,
+            interrupt_handlers.shlock,
+            interrupt_handlers.shunlock,
+            interrupt_handlers.led
+        ]
 
         self._instructions.append(
             (
@@ -226,7 +263,9 @@ class JobGovernor(Process):
 
     def _inspect_from_interrupt(self):
         from_interrupt = self._owned_res[-1]
+        print(from_interrupt)
         interrupt_type = from_interrupt.data.get('type')
+        si = from_interrupt.data.get('si')
         vm = self._children[-1]
         if interrupt_type == 'timeout':
             self._kernel._rm._cpu.reset_registers()
@@ -234,6 +273,10 @@ class JobGovernor(Process):
             vm._change_ic(0)
             vm._set_status(Status.READY)
         elif interrupt_type == 'io':
+            # self._kernel.request_res(resource.CHANNEL_DEVICE, 1)
+            self._si_handlers[si](self._kernel._rm)
+            # self._kernel.request_res(resource.FROM_CHANNEL_DEVICE, 1)
+            # self._kernel.release_res(resource.CHANNEL_DEVICE, [1])
             self._kernel._rm.current_vm._cpu._halted = False
             vm._change_ic(0)
             vm._set_status(Status.READY)

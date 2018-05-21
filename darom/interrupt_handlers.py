@@ -16,8 +16,22 @@
 # along with Darom.  If not, see <http://www.gnu.org/licenses/>.
 
 from darom import constants
+from darom import resource
 from darom import util
 
+import pdb
+
+
+def _get_current_vm_id(real_machine):
+    vms = list(map(lambda pair: pair[0], real_machine._vms))
+    curr_vm = real_machine._current_vm
+    return vms.index(curr_vm)
+
+def _release_interrupt_resource(kernel, vm_id, type):
+    kernel.release_res(
+        resource.FROM_INTERRUPT,
+        [{"vm_id": vm_id, "type": type}]
+    )
 
 def invalid_instruction_code(real_machine):
     print('Invalid instruction code')
@@ -41,7 +55,8 @@ def stack_overflow(real_machine):
 
 def halt(real_machine):
     real_machine.current_vm.cpu.halt()
-    # print('Halted')
+    # vm_id = _get_current_vm_id(real_machine)
+    # _release_interrupt_resource(real_machine._kernel, vm_id, 'halt')
 
 
 def in_(real_machine):
@@ -174,7 +189,11 @@ def led(real_machine):
     green = real_machine.current_vm.stack_pop()
     red = real_machine.current_vm.stack_pop()
 
-    real_machine.channel_device.write_led([red, green, blue])
+    # real_machine.channel_device.write_led([red, green, blue])
+    real_machine._kernel.release_res(
+        resource.DATA_TRANSFER,
+        [{'dest': 'led', 'rgb':[red, green, blue]}]
+    )
 
 
 def timeout(real_machine):
