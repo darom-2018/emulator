@@ -125,7 +125,7 @@ class StartStop(Process):
 
         self._instructions.append((self._kernel.create_process, [Main(kernel=self._kernel, priority=80)]             ))
         self._instructions.append((self._kernel.create_process, [Loader(kernel=self._kernel, priority=80)]           ))
-        self._instructions.append((self._kernel.create_process, [Interrupt(kernel=self._kernel, priority=80)]        ))
+        self._instructions.append((self._kernel.create_process, [Interrupt(kernel=self._kernel, priority=70)]        ))
         self._instructions.append((self._kernel.create_process, [ChannelDevice(kernel=self._kernel, priority=80)]    ))
         # self._instructions.append((self._kernel.create_process, [Idle(kernel=self._kernel, priority=80)]             ))
         self._instructions.append((self._kernel.request_res, [resource.OS_END, 1]               ))
@@ -235,6 +235,7 @@ class JobGovernor(Process):
             vm._set_status(Status.READY)
         elif interrupt_type == 'io':
             self._kernel._rm.current_vm._cpu._halted = False
+            vm._change_ic(0)
             vm._set_status(Status.READY)
         elif interrupt_type == 'halt':
             self._kernel.release_res(resource.TASK_IN_USER_MEMORY, [self])

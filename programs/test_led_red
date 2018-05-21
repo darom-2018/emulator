@@ -1,0 +1,13 @@
+$PROGRAM
+    "TEST_LED"
+$DATA
+$CODE
+start:
+    PUSH 255
+    PUSH 0
+    PUSH 0
+    LED
+    PUSH @start
+    JMP
+    HALT
+$END

@@ -178,7 +178,8 @@ class RealMachine:
         data_size, code_size = program.size()
         page_count = util.to_page_count(data_size + code_size)
 
-        self._current_vm = VirtualMachine(program, self)
+        new_vm = VirtualMachine(program, self)
+        # self._current_vm = VirtualMachine(program, self)
         ptr = bytearray(4)
 
         ptr[0] = data_size + code_size
@@ -210,11 +211,15 @@ class RealMachine:
         for i in range(code_size):
             self.memory.write_byte(i + data_size, code_bytes[i], virtual=True)
 
-        self._current_vm.cpu.pc = cs
-        self._current_vm.cpu.sp = ss
-        self._current_vm.cpu.ds = ds
+        new_vm.cpu.pc = cs
+        new_vm.cpu.sp = ss
+        new_vm.cpu.ds = ds
+        # self._current_vm.cpu.pc = cs
+        # self._current_vm.cpu.sp = ss
+        # self._current_vm.cpu.ds = ds
 
-        self._vms.append((self._current_vm, ptr))
+        self._vms.append((new_vm, ptr))
+        # self._vms.append((self._current_vm, ptr))
 
     def _dump_registers(self):
         print(
@@ -274,6 +279,7 @@ class RealMachine:
             si_handlers[self._cpu.si](self)
             self._release_interrupt(vm_id)
             self._cpu.si = 0
+            interrupt_handlers.timeout(self)
         if self._cpu.ti <= 0:
             self._release_interrupt(vm_id)
             interrupt_handlers.timeout(self)
