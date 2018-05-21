@@ -106,6 +106,7 @@ class Kernel:
             if window:
                 # print('update started')
                 window.update()
+
             if init:
                 for f in init:
                     f()
@@ -171,6 +172,7 @@ class Kernel:
     '''
     def release_res(self, res_name, elem_data):
         print("{:<15} : release_res({}, {})".format(self._run_proc.name, res_name, elem_data)) if self._verbose else None
+
         res = self._find_res_by_name(res_name)
         for data in elem_data:
             new_element = resource.ResourceElement(name=res_name, data=data)

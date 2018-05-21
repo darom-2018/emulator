@@ -141,14 +141,22 @@ class Main(Process):
     def __init__(self, kernel, priority):
         super().__init__(kernel=kernel, priority=priority, name="Main")
 
-        self._instructions.append((self._kernel.request_res, [resource.TASK_IN_USER_MEMORY, 1]))
+        self._instructions.append((
+            self._kernel.request_res,
+            [resource.TASK_IN_USER_MEMORY, 1])
+        )
         self._instructions.append((self.inspect_resource, []))
         self._instructions.append((self._change_ic, [0]))
 
     def inspect_resource(self):
         res = self._owned_res[-1]
         if not isinstance(res.data, JobGovernor):
-            self._kernel.create_process(JobGovernor(kernel=self._kernel, priority=60, vm_id=res.data))
+            self._kernel.create_process(
+                JobGovernor(
+                    kernel=self._kernel,
+                    priority=60, vm=res.data
+                )
+            )
             self._owned_res.remove(res)
         else:
             self._kernel.destroy_process(res.data)
@@ -195,14 +203,17 @@ class ChannelDevice(Process):
 
 
 class JobGovernor(Process):
-    def __init__(self, kernel, priority, vm_id):
-        super().__init__(kernel=kernel, priority=priority, name="JobGovernor {}".format(vm_id))
+    def __init__(self, kernel, priority, vm):
+        super().__init__(kernel=kernel, priority=priority, name="JobGovernor {}".format(vm.get('vm_id')))
 
         self._instructions.append(
-            (self._kernel.create_process, [VirtualMachine(kernel=self._kernel, priority=40, vm_id=vm_id)])
+            (
+                self._kernel.create_process,
+                [VirtualMachine(kernel=self._kernel, priority=40, vm=vm)]
+            )
         )
         self._instructions.append(
-            (self._kernel.request_res, [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm_id)])
+            (self._kernel.request_res, [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm.get('vm_id'))])
         )
         self._instructions.append((self._inspect_from_interrupt, []))
         self._instructions.append((self._change_ic, [1]))
@@ -224,14 +235,19 @@ class JobGovernor(Process):
 
 
 class VirtualMachine(Process):
-    def __init__(self, kernel, priority, vm_id):
+    def __init__(self, kernel, priority, vm):
+        vm_id = vm.get('vm_id')
         super().__init__(kernel=kernel, priority=priority, name="VirtualMachine {}".format(vm_id))
 
         self._instructions.append((self._kernel._rm.run, [vm_id]))
+        self._instructions.append((self._update_vm_gui, [vm.get('gui')]))
         self._instructions.append((self._set_status, [Status.BLOCK]))
 
     def _set_status(self, status):
         self.status = status
+
+    def _update_vm_gui(self, gui):
+        gui.update()
 
 
 class Idle(Process):
