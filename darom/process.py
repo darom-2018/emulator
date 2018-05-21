@@ -213,7 +213,10 @@ class JobGovernor(Process):
             )
         )
         self._instructions.append(
-            (self._kernel.request_res, [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm.get('vm_id'))])
+            (
+                self._kernel.request_res,
+                [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm.get('vm_id'))]
+            )
         )
         self._instructions.append((self._inspect_from_interrupt, []))
         self._instructions.append((self._change_ic, [1]))
@@ -229,6 +232,9 @@ class JobGovernor(Process):
             self._kernel._rm._cpu.reset_registers()
             self._kernel._rm.current_vm._cpu._halted = False
             vm._change_ic(0)
+            vm._set_status(Status.READY)
+        elif interrupt_type == 'io':
+            self._kernel._rm.current_vm._cpu._halted = False
             vm._set_status(Status.READY)
         elif interrupt_type == 'halt':
             self._kernel.release_res(resource.TASK_IN_USER_MEMORY, [self])
