@@ -40,8 +40,10 @@ class DUP(instruction.Instruction):
         super().__init__(b'\x10', 'DUP')
 
     def execute(self, virtual_machine):
-        head = virtual_machine.real_machine.memory.read_word(virtual_machine.cpu.sp, virtual=True)
-        virtual_machine.cpu.sp += constants.WORD_SIZE
+        head = virtual_machine.real_machine.memory.read_word(
+            virtual_machine.cpu.sp-constants.WORD_SIZE, virtual=True
+        )
+        # virtual_machine.cpu.sp += constants.WORD_SIZE
         virtual_machine.real_machine.memory.write_word(virtual_machine.cpu.sp, head, virtual=True)
 
 
