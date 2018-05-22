@@ -116,6 +116,7 @@ class StartStop(Process):
 
         self._instructions.append((self._kernel.create_res, [resource.OS_END]))
         self._instructions.append((self._kernel.create_res, [resource.FROM_UI]))
+        self._instructions.append((self._kernel.create_res, [resource.USER_INPUT]))
         self._instructions.append((self._kernel.create_res, [resource.USER_MEMORY]))
         self._instructions.append((self._kernel.create_res, [resource.TASK_IN_USER_MEMORY]))
         self._instructions.append((self._kernel.create_res, [resource.INTERRUPT]))
@@ -221,6 +222,7 @@ class ChannelDevice(Process):
 class JobGovernor(Process):
     def __init__(self, kernel, priority, vm):
         super().__init__(kernel=kernel, priority=priority, name="JobGovernor {}".format(vm.get('vm_id')))
+        self._vm_id = vm.get('vm_id')
 
         self._pi_handlers = [
             None,
@@ -256,6 +258,7 @@ class JobGovernor(Process):
             )
         )
         self._instructions.append((self._inspect_from_interrupt, []))
+        self._instructions.append((self._request_input, []))
         self._instructions.append((self._change_ic, [1]))
 
     def _check_vm_id(self, vm_id):
@@ -265,23 +268,41 @@ class JobGovernor(Process):
         from_interrupt = self._owned_res[-1]
         print(from_interrupt)
         interrupt_type = from_interrupt.data.get('type')
-        si = from_interrupt.data.get('si')
-        vm = self._children[-1]
+        self._si = from_interrupt.data.get('si')
+        self._vm_process = self._children[-1]
         if interrupt_type == 'timeout':
             self._kernel._rm._cpu.reset_registers()
             self._kernel._rm.current_vm._cpu._halted = False
-            vm._change_ic(0)
-            vm._set_status(Status.READY)
+            self._vm_process._change_ic(0)
+            self._vm_process._set_status(Status.READY)
         elif interrupt_type == 'io':
             # self._kernel.request_res(resource.CHANNEL_DEVICE, 1)
-            self._si_handlers[si](self._kernel._rm)
+            if self._si == 2 or self._si == 3:
+                self._kernel.request_res(
+                    resource.USER_INPUT,
+                    1,
+                    cond=lambda elem: elem.data.get('vm_id') == self._vm_id
+                )
+                return
+            else:
+                self._si_handlers[self._si](self._kernel._rm)
             # self._kernel.request_res(resource.FROM_CHANNEL_DEVICE, 1)
             # self._kernel.release_res(resource.CHANNEL_DEVICE, [1])
             self._kernel._rm.current_vm._cpu._halted = False
-            vm._change_ic(0)
-            vm._set_status(Status.READY)
+            self._vm_process._change_ic(0)
+            self._vm_process._set_status(Status.READY)
         elif interrupt_type == 'halt':
             self._kernel.release_res(resource.TASK_IN_USER_MEMORY, [self])
+        self._ic += 1
+
+    def _request_input(self):
+        from_input = self._owned_res[-1]
+        self._si_handlers[self._si](self._kernel._rm)
+        print(from_input)
+        self._kernel._rm.current_vm._cpu._halted = False
+        # self._kernel._rm._cpu.reset_registers()
+        self._vm_process._change_ic(0)
+        self._vm_process._set_status(Status.READY)
 
 
 class VirtualMachine(Process):

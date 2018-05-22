@@ -2,6 +2,7 @@ import random
 
 OS_END = "OSEnd"
 FROM_UI = "FromUI"
+USER_INPUT = "UserInput"
 USER_MEMORY = "Memory"
 TASK_IN_USER_MEMORY = "TaskInUserMemory"
 INTERRUPT = "Interrupt"

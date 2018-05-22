@@ -132,6 +132,13 @@ class MachineFrame:
         self.memory_frame = MemoryFrame(self.frame)
         self.program_frame = ProgramFrame(window, code)
 
+        self.input_button = tkinter.Button(
+            self.io_frame.frame,
+            text='Input',
+            command=self.input
+        )
+        self.input_button.pack(side='bottom')
+
         step_button = tkinter.Button(
             self.program_frame.frame,
             text='Step',
@@ -151,6 +158,12 @@ class MachineFrame:
         self.update()
 
     def input(self):
+        # print(self.io_frame.input_entry.get())
+        data = self.io_frame.input_entry.get()
+        self.rm._kernel.release_res(
+            resource.USER_INPUT,
+            [{'data': data, 'vm_id': self.vm_id}]
+        )
         if self.io_frame.input_entry.get():
             self.rm.input_device.input = self.io_frame.input_entry.get()
 

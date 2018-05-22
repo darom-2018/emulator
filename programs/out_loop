@@ -1,0 +1,10 @@
+$PROGRAM
+    "OUT_LOOP"
+$DATA
+$CODE
+  INI
+  OUTI
+  DUP
+  OUTI
+  HALT
+$END

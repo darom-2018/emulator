@@ -35,7 +35,6 @@ from gui import real_machine as rm_gui
 from gui import virtual_machine as vm_gui
 
 
-<<<<<<< HEAD
 def load_program(
         window,
         program_loading_window,
@@ -170,6 +169,13 @@ def main():
                 window, real_machine_gui, real_machine, filename='programs/test_led_blue')
             )
         load_blue_button.pack()
+
+        load_in_button = tkinter.Button(
+            window, text='Load In',
+            command=lambda: start_virtual_machine(
+                window, real_machine_gui, real_machine, filename='programs/test_in')
+            )
+        load_in_button.pack()
 
         # window.update()
         kernel.planner(window)

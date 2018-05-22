@@ -1,0 +1,8 @@
+$PROGRAM
+    "TEST_DUP"
+$DATA
+$CODE
+    PUSH 2
+    DUP
+    HALT
+$END
