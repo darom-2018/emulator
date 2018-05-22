@@ -43,8 +43,8 @@ class DUP(instruction.Instruction):
         head = virtual_machine.real_machine.memory.read_word(
             virtual_machine.cpu.sp-constants.WORD_SIZE, virtual=True
         )
-        # virtual_machine.cpu.sp += constants.WORD_SIZE
         virtual_machine.real_machine.memory.write_word(virtual_machine.cpu.sp, head, virtual=True)
+        virtual_machine.cpu.sp += constants.WORD_SIZE
 
 
 class POP(instruction.Instruction):

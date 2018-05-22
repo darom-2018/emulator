@@ -3,8 +3,7 @@ $PROGRAM
 $DATA
 $CODE
   INI
-  OUTI
   DUP
-  OUTI
+  INC
   HALT
 $END
