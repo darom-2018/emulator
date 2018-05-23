@@ -90,6 +90,7 @@ def main():
     parser.add_argument('programs', nargs='*', metavar='PROGRAM')
     parser.add_argument('--cli', action='store_true')
     parser.add_argument('--storage-device', type=open)
+    parser.add_argument('--input', action='store')
 
     args = parser.parse_args()
     real_machine = RealMachine()
@@ -107,7 +108,9 @@ def main():
             print('Loading', program)
             real_machine.load(program)
             print('Running', program)
-            real_machine.run(i)
+            while real_machine.current_vm.running:
+                real_machine.input_device.input = args.input
+                real_machine.step(i)
     else:
         window = tkinter.Tk()
         window.title('Emulator')

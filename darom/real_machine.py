@@ -266,13 +266,7 @@ class RealMachine:
         if self._cpu.ti <= 0:
             interrupt_handlers.timeout(self)
 
-    def run(self, vm_id):
-        self._current_vm, self.cpu.ptr = self._vms[vm_id]
-
-        while self._current_vm.running:
-            self.step(vm_id)
-
-    def step(self, vm_id):
+    def step(self, vm_id, verbose=1):
         self._current_vm, self.cpu.ptr = self._vms[vm_id]
 
         if not self._current_vm.running:
@@ -306,5 +300,11 @@ class RealMachine:
             self._cpu.pi = 1
         except exceptions.PageFaultError:
             self._cpu.pi = 3
+
+        if verbose > 1:
+            print('User memory: ')
+            print(self._user_memory.dump())
+            print('Shared memory: ')
+            print(self._shared_memory)
 
         self.test()

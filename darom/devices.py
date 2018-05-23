@@ -28,7 +28,6 @@ class InputDevice:
     @property
     def input(self):
         memory = self._memory
-
         self._memory = []
 
         return memory
@@ -102,19 +101,22 @@ class StorageDevice:
         for match in re.finditer(r'(?i)\$PROGRAM', data):
             if last_match is not None:
                 program = data[last_match.start():match.start()]
-                program_name = re.search(r'[^(?i)\$PROGRAM\s+]([^"]*)"', program)[1].upper()
+                program_name = re.search(
+                    r'[^(?i)\$PROGRAM\s+]([^"]*)"', program)[1].upper()
 
                 if program_name in programs:
                     raise Exception(
-                        'Multiple programs named {} in {}'.format(program_name, file)
-                    )
+                        'Multiple programs named {} in {}'.format(
+                            program_name, file))
 
                 programs[program_name] = program
 
             last_match = match
 
         program = data[last_match.start():len(data)]
-        program_name = re.search(r'[^(?i)\$PROGRAM\s+]([^"]*)"', program)[1].upper()
+        program_name = re.search(
+            r'[^(?i)\$PROGRAM\s+]([^"]*)"',
+            program)[1].upper()
 
         if program_name in programs:
             raise Exception(
