@@ -1,8 +1,0 @@
-$PROGRAM
-    "TEST_INC"
-$DATA
-$CODE
-    PUSH 0x69
-    INC
-    HALT
-$END

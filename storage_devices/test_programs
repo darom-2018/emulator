@@ -1,0 +1,489 @@
+$PROGRAM
+    "TEST"
+$DATA
+    "0123" ; Will be parsed as "0123"
+    0123   ; Will be parsed as 83
+    0x123  ; Will be parsed as 291
+    123h   ; Will be parsed as 291
+    123    ; Will be parsed as 123
+    "TEST!@#"
+$CODE
+start:
+    NOP
+    DUP
+    PUSH 0
+    POP
+    PUSH 0
+    PUSH 0
+    PUSH 0
+    POPM
+    PUSH @start
+    PUSH @end
+    PUSH 0x10
+    PUSH 0x20
+    PUSH 0x30
+    PUSH 0
+    PUSHM
+    PUSHF
+    PUSHDS
+    ADD
+    CMP
+    DEC
+    DIV
+    INC
+    MUL
+    SUB
+    AND
+    NOT
+    OR
+    XOR
+    JMP
+    JC
+    JE
+    JG
+    JGE
+    JL
+    JLE
+    JNC
+    JNE
+    JNP
+    JP
+    LOOP
+    IN
+    INI
+    OUT
+    OUTI
+    SHREAD
+    SHWRITE
+    SHLOCK
+end:
+    LED
+    HALT
+$END
+$PROGRAM
+    "TEST_ADD"
+$DATA
+$CODE
+    PUSH EEEFh
+    PUSH 1
+    ADD         ; EEF0h w\ FLAGS as 0x10
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_AND"
+$DATA
+$CODE
+    PUSH 7
+    PUSH 8
+    AND     ; 0
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_DIV"
+$DATA
+$CODE
+    PUSH FFFFh
+    PUSH FFFFh
+    DIV         ; 1
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_DUP"
+$DATA
+$CODE
+    PUSH 6969h
+    DUP
+    POP
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_IN"
+$DATA
+    "Hello, world!"
+$CODE
+    PUSH 13
+    PUSH 0
+    PUSH 0
+    IN
+    HALT
+$END
+$PROGRAM
+    "TEST_INC"
+$DATA
+$CODE
+    PUSH 0x69
+    INC
+    HALT
+$END
+$PROGRAM
+    "TEST_INI"
+$DATA
+$CODE
+    INI ;number from input should appear in stack
+    HALT
+$END
+$PROGRAM
+    "TEST_INI_MUL"
+$DATA
+    "Iveskite skaiciu:"
+$CODE
+    PUSH 18
+    PUSH 0
+    PUSH 0
+    OUT
+    INI
+    PUSH 18
+    PUSH 0
+    PUSH 0
+    OUT
+    INI
+    MUL
+    OUTI
+    HALT
+$END
+$PROGRAM
+    "TEST_JMP"
+$DATA
+$CODE
+    PUSH @label
+    JMP
+    HALT
+label:
+    HALT
+$END
+$PROGRAM
+    "TEST_JMP_LOOP"
+$DATA
+$CODE
+label:
+    PUSH 1
+    PUSH 2
+    CMP
+    POP
+    PUSH @label
+    JNE
+$END
+$PROGRAM
+    "TEST_JMP_VARIANTS"
+$DATA
+$CODE
+    PUSH @je
+    JC
+je:
+    PUSH @jg
+    JE
+jg:
+    PUSH @jge
+    JG
+jge:
+    PUSH @jl
+    JGE
+jl:
+    PUSH @jle
+    JL
+jle:
+    PUSH @jnc
+    JLE
+jnc:
+    PUSH @jne
+    JNC
+jne:
+    PUSH @jnp
+    JNE
+jnp:
+    PUSH @jp
+    JNP
+jp:
+    PUSH @halt
+    JP
+    HALT
+halt:
+    HALT
+$END
+$PROGRAM
+    "TEST_LED"
+$DATA
+$CODE
+black:
+    PUSH 0
+    PUSH 0
+    PUSH 0
+    LED
+red:
+    PUSH 200
+    PUSH 30
+    PUSH 30
+    LED
+    PUSH @black
+    JMP
+    HALT
+$END
+$PROGRAM
+    "TEST_LOOP"
+$DATA
+$CODE
+    PUSH 3
+label:
+    PUSH @label
+    LOOP
+    HALT
+$END
+$PROGRAM
+    "TEST_MUL"
+$DATA
+$CODE
+    PUSH FFFFh
+    PUSH FFFFh
+    MUL         ; 1
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_NOT"
+$DATA
+$CODE
+    PUSH FF00h
+    NOT      ; FFh
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_OR"
+$DATA
+$CODE
+    PUSH 7
+    PUSH 8
+    OR      ; 15
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_OUT"
+$DATA
+    "Hello, world!"
+$CODE
+    PUSH 13
+    PUSH 0
+    PUSH 0
+    OUT
+    HALT
+$END
+$PROGRAM
+    "TEST_OUTI"
+$DATA
+$CODE
+    PUSH 13
+    OUTI
+    HALT
+$END
+$PROGRAM
+    "TEST_PUSH"
+$DATA
+$CODE
+    PUSH 1
+    PUSH 2
+    PUSH 3
+    PUSH 4
+    HALT
+$END
+$PROGRAM
+    "TEST_PUSHF"
+$DATA
+$CODE
+    PUSH FFFFh
+    PUSH 1
+    ADD
+    POP
+    PUSHF
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_SHARED_MEMORY"
+$DATA
+$CODE
+    SHLOCK
+    SHUNLOCK
+    HALT
+$END
+$PROGRAM
+    "TEST_SEMAPHORE"
+$DATA
+$CODE
+    SHLOCK
+    SHLOCK
+    HALT
+$END
+$PROGRAM
+    "TEST_SHWRITE"
+$DATA
+    "111111111"
+$CODE
+    SHLOCK
+    PUSH 0
+    PUSH 0
+    PUSH 0
+    PUSH 0
+    PUSH 5
+    SHWRITE
+    SHUNLOCK
+    HALT
+$END
+$PROGRAM
+    "TEST_STACK_OVERFLOW"
+$DATA
+$CODE
+label:
+    PUSH 1
+    PUSH @label
+    JMP
+$END
+$PROGRAM
+    "TEST_SUB"
+$DATA
+$CODE
+    PUSH 0
+    PUSH FFFFh
+    SUB         ; FFFFh
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_SUB_UNDERFLOW"
+$DATA
+$CODE
+    PUSH FFFFh
+    PUSH 0
+    SUB         ; 1 w\ FLAGS as 0x100
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_TIMER"
+$DATA
+$CODE
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    HALT
+$END
+$PROGRAM
+    "TEST_XOR"
+$DATA
+$CODE
+    PUSH 1
+    PUSH 1
+    XOR     ; 0
+    POP
+    HALT
+$END
+$PROGRAM
+    "TEST_ZERO_DIV"
+$DATA
+$CODE
+    PUSH 0
+    PUSH 2
+    DIV
+    HALT
+$END

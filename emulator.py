@@ -30,20 +30,18 @@ from gui import real_machine as rm_gui
 from gui import virtual_machine as vm_gui
 
 
-def start_virtual_machine(window, real_machine_gui, real_machine):
-    virtual_machine_id = real_machine.vm_count
+def load_program(
+        window,
+        program_loading_window,
+        real_machine_gui,
+        real_machine,
+        program):
+    program_loading_window.destroy()
 
-    program_file = filedialog.askopenfile(title='Choose a program to load…')
-    if program_file is None:
-        return
+    real_machine.load(program)
+    virtual_machine_id = real_machine.vm_count - 1
 
-    code = program_file.read()
-    program_file.close()
-    program_file = open(program_file.name, 'r')
-
-    real_machine.add_storage_device(StorageDevice.from_file(program_file))
-
-    raise NotImplementedError('Storage devices not yet supported')
+    code = real_machine.program_text(program)
 
     virtual_machine_gui = vm_gui.MachineFrame(
         window,
@@ -53,6 +51,38 @@ def start_virtual_machine(window, real_machine_gui, real_machine):
         code)
 
     virtual_machine_gui.update()
+
+
+def select_program(window, real_machine_gui, real_machine):
+    program_loading_window = tkinter.Toplevel(window)
+    program_loading_window.title('Choose a program to load…')
+    program_loading_frame = tkinter.LabelFrame(
+        program_loading_window, text='Programs', padx=5, pady=5)
+    program_loading_frame.pack()
+    program_list = tkinter.Listbox(program_loading_frame, width=50, height=20)
+    program_list.pack()
+    load_button = tkinter.Button(
+        program_loading_frame,
+        text='Load',
+        command=lambda: load_program(
+            window,
+            program_loading_window,
+            real_machine_gui,
+            real_machine,
+            program_list.selection_get()))
+    load_button.pack(side='bottom')
+
+    for program in real_machine.programs:
+        program_list.insert('end', program)
+
+
+def add_storage_device(window, real_machine_gui, real_machine):
+    storage_device = filedialog.askopenfile(
+        title='Choose a storage device to add…')
+    if storage_device is None:
+        return
+
+    real_machine.add_storage_device(StorageDevice.from_file(storage_device))
 
 
 def main():
@@ -69,7 +99,9 @@ def main():
             print('No storage device specified, nothing to do')
             return
 
-        real_machine.add_storage_device(StorageDevice.from_file(args.storage_device))
+        real_machine.add_storage_device(
+            StorageDevice.from_file(
+                args.storage_device))
 
         for i, program in enumerate(args.programs):
             print('Loading', program)
@@ -82,10 +114,19 @@ def main():
 
         real_machine_gui = rm_gui.MachineFrame(window, real_machine)
 
-        load_program_button = tkinter.Button(
-            window, text='Load program', command=lambda: start_virtual_machine(
+        storage_device_button = tkinter.Button(
+            window,
+            text='Add a storage device',
+            command=lambda: add_storage_device(
+                window,
+                real_machine_gui,
+                real_machine))
+        storage_device_button.pack(side='top')
+
+        program_load_button = tkinter.Button(
+            window, text='Load a program', command=lambda: select_program(
                 window, real_machine_gui, real_machine))
-        load_program_button.pack(side='bottom')
+        program_load_button.pack(side='bottom')
 
         window.mainloop()
 

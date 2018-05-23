@@ -1,7 +1,0 @@
-$PROGRAM
-    "TEST_INI"
-$DATA
-$CODE
-    INI ;number from input should appear in stack
-    HALT
-$END

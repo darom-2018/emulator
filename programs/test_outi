@@ -1,8 +1,0 @@
-$PROGRAM
-    "TEST_OUTI"
-$DATA
-$CODE
-    PUSH 13
-    OUTI
-    HALT
-$END

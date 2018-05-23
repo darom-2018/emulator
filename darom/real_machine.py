@@ -117,6 +117,21 @@ class RealMachine:
         return self._vms[-1][0]
 
     @property
+    def programs(self):
+        programs = []
+        for storage_device in self._storage_devices:
+            programs.append(list(storage_device.programs.keys()))
+        return sum(programs, [])
+
+    def program_text(self, program):
+        program_text = None
+        for storage_device in self._storage_devices:
+            program_text = storage_device.programs.get(program.upper())
+            if program_text is not None:
+                break
+        return program_text
+
+    @property
     def shared_memory(self):
         return self._shared_memory
 
@@ -153,14 +168,9 @@ class RealMachine:
         # TODO: This really doesn’t belong here.
         self.cpu.reset_registers()
 
-        program_text = None
-
-        for storage_device in self._storage_devices:
-            program_text = storage_device.programs.get(program.upper())
-            if program_text is not None:
-                break
-
-        program = Assembler(self.cpu).assemble_from_data(program_text)
+        program = Assembler(
+            self.cpu).assemble_from_data(
+            self.program_text(program))
 
         data_size, code_size = program.size()
         page_count = util.to_page_count(data_size + code_size)
