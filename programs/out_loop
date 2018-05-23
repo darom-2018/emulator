@@ -3,7 +3,11 @@ $PROGRAM
 $DATA
 $CODE
   INI
-  DUP
+loop:
   INC
+  DUP
+  OUTI
+  PUSH @loop
+  JMP
   HALT
 $END

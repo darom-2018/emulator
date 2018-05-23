@@ -17,6 +17,7 @@
 
 from darom import constants
 from darom import exceptions
+from darom.devices import OutputDevice
 
 
 class CPU:
@@ -43,6 +44,7 @@ class VirtualMachine:
         self._cpu = CPU()
         self._program = program
         self._real_machine = real_machine
+        self._output_device = OutputDevice()
 
     @property
     def cpu(self):
@@ -55,6 +57,10 @@ class VirtualMachine:
     @property
     def real_machine(self):
         return self._real_machine
+
+    @property
+    def output_device(self):
+        return self._output_device
 
     @property
     def running(self):

@@ -169,8 +169,9 @@ class MachineFrame:
 
     def output(self):
         self.io_frame.output_box.config(state=tkinter.NORMAL)
-        self.io_frame.output_box.insert(
-            tkinter.END, self.rm.output_device.output)
+        if self.rm.current_vm:
+            self.io_frame.output_box.insert(
+                tkinter.END, self.vm.output_device.output)
         self.io_frame.output_box.config(state=tkinter.DISABLED)
         self.io_frame.output_box.config(state=tkinter.DISABLED)
 

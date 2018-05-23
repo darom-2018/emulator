@@ -2,7 +2,7 @@ $PROGRAM
     "TEST_DUP"
 $DATA
 $CODE
-    PUSH 2
+    PUSH 6969h
     DUP
     HALT
 $END

@@ -1,5 +1,5 @@
 $PROGRAM
-    "TEST_LED"
+    "TEST_LED_RED"
 $DATA
 $CODE
 start:

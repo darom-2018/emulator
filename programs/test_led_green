@@ -1,11 +1,11 @@
 $PROGRAM
-    "TEST_LED_BLUE"
+    "TEST_LED_GREEN"
 $DATA
 $CODE
 start:
     PUSH 0
-    PUSH 0
     PUSH 255
+    PUSH 0
     LED
     PUSH @start
     JMP

@@ -170,10 +170,17 @@ def main():
             )
         load_blue_button.pack()
 
-        load_in_button = tkinter.Button(
-            window, text='Load In',
+        load_green_button = tkinter.Button(
+            window, text='Load Green',
             command=lambda: start_virtual_machine(
-                window, real_machine_gui, real_machine, filename='programs/test_in')
+                window, real_machine_gui, real_machine, filename='programs/test_led_green')
+            )
+        load_green_button.pack()
+
+        load_in_button = tkinter.Button(
+            window, text='Load OutLoop',
+            command=lambda: start_virtual_machine(
+                window, real_machine_gui, real_machine, filename='programs/out_loop')
             )
         load_in_button.pack()
 

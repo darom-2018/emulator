@@ -103,14 +103,14 @@ def out(real_machine):
     string = ''
     for i in range(character_count):
         string += chr(real_machine.memory.read_byte(address + i, virtual=True))
-    real_machine.channel_device.write_stdoutput(string)
+    real_machine.current_vm.output_device.output = string
 
 
 def outi(real_machine):
     word = int.from_bytes(
         real_machine.current_vm.stack_pop(),
         byteorder=constants.BYTE_ORDER)
-    real_machine.channel_device.write_stdoutput(str(word))
+    real_machine.current_vm.output_device.output = str(word)
 
 
 def shread(real_machine):

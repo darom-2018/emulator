@@ -274,12 +274,15 @@ class RealMachine:
             # pi_handlers[self._cpu.pi](self)
             self._release_interrupt(vm_id)
             self._cpu.pi = 0
+            interrupt_handlers.timeout(self)
+            return
         if (self._cpu.si) > 0:
             # self._dump_registers()
             # si_handlers[self._cpu.si](self)
             self._release_interrupt(vm_id)
             self._cpu.si = 0
             interrupt_handlers.timeout(self)
+            return
         if self._cpu.ti <= 0:
             self._release_interrupt(vm_id)
             interrupt_handlers.timeout(self)
@@ -289,6 +292,7 @@ class RealMachine:
 
         if not self._current_vm.running:
             return
+
 
         try:
             instruction = self.memory.read_byte(

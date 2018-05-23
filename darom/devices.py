@@ -81,7 +81,7 @@ class LedDevice:
                 int.from_bytes(byte, byteorder=constants.BYTE_ORDER)
             )
 
-        print(self._rgb)
+        # print(self._rgb)
 
 
 class StorageDevice:
