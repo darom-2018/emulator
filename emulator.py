@@ -110,6 +110,8 @@ def main():
             real_machine.load(program)
             print('Running', program)
             while real_machine.current_vm.running:
+                if args.input:
+                    real_machine.input_device.input = args.input
                 real_machine.input_device.input = args.input
                 real_machine.step(i)
     else:
