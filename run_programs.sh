@@ -1,11 +1,12 @@
 #!/bin/sh
 
-# Remove once test_ini runs under CLI
-# set -e
-
 test -n "$srcdir" || srcidr=$(dirname "$0")
 test -n "$srcdir" || srcdir=.
 
-for program in `find "${srcdir}/programs" -type f`; do
-    "${srcdir}/emulator.py" --cli "$program";
+set -e
+
+programs="$(awk '/\$PROGRAM/{getline; print}' ${srcdir}/storage_devices/test_programs | sed 's/"//g')"
+
+for program in $programs; do
+    "${srcdir}/emulator.py" --cli --storage-device "${srcdir}/storage_devices/test_programs" "$program" --input 5;
 done

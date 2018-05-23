@@ -22,8 +22,9 @@ from darom import exceptions
 from darom import instructions
 from darom import interrupt_handlers
 from darom import util
+from darom.assembler import Assembler
 from darom.channel_device import ChannelDevice
-from darom.devices import InputDevice, OutputDevice, LedDevice
+from darom.devices import InputDevice, OutputDevice, LedDevice, StorageDevice
 from darom.instruction import Instruction, IOInstruction
 from darom.memory import Memory
 from darom.semaphore import Semaphore
@@ -93,6 +94,7 @@ class RealMachine:
         self._input_device = InputDevice()
         self._output_device = OutputDevice()
         self._led_device = LedDevice()
+        self._storage_devices = []
 
     @property
     def cpu(self):
@@ -113,6 +115,21 @@ class RealMachine:
     @property
     def last_vm(self):
         return self._vms[-1][0]
+
+    @property
+    def programs(self):
+        programs = []
+        for storage_device in self._storage_devices:
+            programs.append(list(storage_device.programs.keys()))
+        return sum(programs, [])
+
+    def program_text(self, program):
+        program_text = None
+        for storage_device in self._storage_devices:
+            program_text = storage_device.programs.get(program.upper())
+            if program_text is not None:
+                break
+        return program_text
 
     @property
     def shared_memory(self):
@@ -138,8 +155,22 @@ class RealMachine:
     def led_device(self):
         return self._led_device
 
+    def add_storage_device(self, storage_device):
+        print(
+            'Adding storage device with programs: {}'.format(
+                list(storage_device.programs.keys())
+            )
+        )
+
+        self._storage_devices.append(storage_device)
+
     def load(self, program):
+        # TODO: This really doesn’t belong here.
         self.cpu.reset_registers()
+
+        program = Assembler(
+            self.cpu).assemble_from_data(
+            self.program_text(program))
 
         data_size, code_size = program.size()
         page_count = util.to_page_count(data_size + code_size)
@@ -235,13 +266,7 @@ class RealMachine:
         if self._cpu.ti <= 0:
             interrupt_handlers.timeout(self)
 
-    def run(self, vm_id):
-        self._current_vm, self.cpu.ptr = self._vms[vm_id]
-
-        while self._current_vm.running:
-            self.step(vm_id)
-
-    def step(self, vm_id):
+    def step(self, vm_id, verbose=1):
         self._current_vm, self.cpu.ptr = self._vms[vm_id]
 
         if not self._current_vm.running:
@@ -275,5 +300,11 @@ class RealMachine:
             self._cpu.pi = 1
         except exceptions.PageFaultError:
             self._cpu.pi = 3
+
+        if verbose > 1:
+            print('User memory: ')
+            print(self._user_memory.dump())
+            print('Shared memory: ')
+            print(self._shared_memory)
 
         self.test()

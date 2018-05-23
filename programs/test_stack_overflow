@@ -1,9 +1,0 @@
-$PROGRAM
-    "TEST_STACK_OVERFLOW"
-$DATA
-$CODE
-label:
-    PUSH 1
-    PUSH @label
-    JMP
-$END

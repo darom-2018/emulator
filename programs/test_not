@@ -1,9 +1,0 @@
-$PROGRAM
-    "TEST_NOT"
-$DATA
-$CODE
-    PUSH FF00h
-    NOT      ; FFh
-    POP
-    HALT
-$END

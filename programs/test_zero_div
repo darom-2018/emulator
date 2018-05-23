@@ -1,9 +1,0 @@
-$PROGRAM
-    "TEST_ZERO_DIV"
-$DATA
-$CODE
-    PUSH 0
-    PUSH 2
-    DIV
-    HALT
-$END

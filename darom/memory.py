@@ -50,8 +50,11 @@ class Memory:
         return pages
 
     def dump(self):
-        for page in self._pages:
-            print(page)
+        for i, page in enumerate(self._pages):
+            print('P{:02d}: '.format(i), end='')
+            for word in page:
+                print('{:02x} {:02x} | '.format(word[0], word[1]), end='')
+            print()
 
     def flatten(self):
         return [word for words in self._pages for word in words]
