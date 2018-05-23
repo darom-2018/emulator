@@ -56,6 +56,7 @@ def load_program(
 def select_program(window, real_machine_gui, real_machine):
     program_loading_window = tkinter.Toplevel(window)
     program_loading_window.title('Choose a program to load…')
+    program_loading_window.resizable(width=False, height=False)
     program_loading_frame = tkinter.LabelFrame(
         program_loading_window, text='Programs', padx=5, pady=5)
     program_loading_frame.pack()
