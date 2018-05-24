@@ -98,14 +98,13 @@ def main():
     parser.add_argument('--cli', action='store_true')
     parser.add_argument('--storage-device', type=open)
     parser.add_argument('--input', action='store')
-
     args = parser.parse_args()
+
     real_machine = RealMachine()
     kernel = Kernel(real_machine, args.verbose)
     StartStop(kernel)
 
     if args.cli:
-        # Thread(name='gui', target=kernel.planner).start()
         if not args.storage_device:
             print('No storage device specified, nothing to do')
             return
@@ -117,77 +116,42 @@ def main():
         for i, program in enumerate(args.programs):
             print('Loading', program)
             real_machine.load(program)
-            kernel.planner(
-            init=[
-                lambda: kernel.release_res(resource.TASK_IN_USER_MEMORY, [i for i in range(len(args.files))]),
-                lambda: kernel.release_res(resource.OS_END, [1])
-                ]
-            )
-            print(kernel._ready_procs)
-            print('Running', program)
+            
+        kernel.planner()
+        
+        for i, program in enumerate(args.programs):
+            print('Loading', program)
             while real_machine.current_vm.running:
-                if args.input:
-                    real_machine.input_device.input = args.input
-                real_machine.input_device.input = args.input
-                real_machine.step(i)
-            print("Shut down signal")
-            kernel.release_res(resource.OS_END, [1])
+                real_machine.step(program)
     else:
         window = tkinter.Tk()
         window.title('Emulator')
 
         real_machine_gui = rm_gui.MachineFrame(window, real_machine)
+        
+        button_frame = tkinter.Frame(window)
+        button_frame.pack(side='bottom')
 
         storage_device_button = tkinter.Button(
-            window,
+            button_frame,
             text='Add a storage device',
             command=lambda: add_storage_device(
                 window,
                 real_machine_gui,
                 real_machine))
-        storage_device_button.pack(side='top')
+        storage_device_button.grid(row=1, column=1)
 
         program_load_button = tkinter.Button(
-            window, text='Load a program', command=lambda: select_program(
+            button_frame, text='Load a program', command=lambda: select_program(
                 window, real_machine_gui, real_machine))
-        program_load_button.pack(side='bottom')
+        program_load_button.grid(row=1, column=2)
 
         dump_kernel_button = tkinter.Button(
-            window, text='Dump kernel', command=lambda: print(kernel))
-        dump_kernel_button.pack()
+            button_frame, text='Dump kernel', command=lambda: print(kernel))
+        dump_kernel_button.grid(row=1, column=3)
 
-        load_red_button = tkinter.Button(
-            window, text='Load Red',
-            command=lambda: start_virtual_machine(
-                window, real_machine_gui, real_machine, filename='programs/test_led_red')
-            )
-        load_red_button.pack()
-
-        load_blue_button = tkinter.Button(
-            window, text='Load Blue',
-            command=lambda: start_virtual_machine(
-                window, real_machine_gui, real_machine, filename='programs/test_led_blue')
-            )
-        load_blue_button.pack()
-
-        load_green_button = tkinter.Button(
-            window, text='Load Green',
-            command=lambda: start_virtual_machine(
-                window, real_machine_gui, real_machine, filename='programs/test_led_green')
-            )
-        load_green_button.pack()
-
-        load_in_button = tkinter.Button(
-            window, text='Load OutLoop',
-            command=lambda: start_virtual_machine(
-                window, real_machine_gui, real_machine, filename='programs/out_loop')
-            )
-        load_in_button.pack()
-
-        # window.update()
         kernel.planner(window)
 
-        # window.mainloop()
         kernel.release_res(resource.OS_END, [1])
 
 

@@ -205,20 +205,41 @@ halt:
     HALT
 $END
 $PROGRAM
-    "TEST_LED"
+    "TEST_LED_RED"
 $DATA
 $CODE
-black:
-    PUSH 0
+start:
+    PUSH 255
     PUSH 0
     PUSH 0
     LED
-red:
-    PUSH 200
-    PUSH 30
-    PUSH 30
+    PUSH @start
+    JMP
+    HALT
+$END
+$PROGRAM
+    "TEST_LED_GREEN"
+$DATA
+$CODE
+start:
+    PUSH 0
+    PUSH 255
+    PUSH 0
     LED
-    PUSH @black
+    PUSH @start
+    JMP
+    HALT
+$END
+$PROGRAM
+    "TEST_LED_BLUE"
+$DATA
+$CODE
+start:
+    PUSH 0
+    PUSH 0
+    PUSH 255
+    LED
+    PUSH @start
     JMP
     HALT
 $END
@@ -279,6 +300,19 @@ $CODE
     PUSH 13
     OUTI
     HALT
+$END
+$PROGRAM
+    "TEST_OUT_LOOP"
+$DATA
+$CODE
+  INI
+loop:
+  INC
+  DUP
+  OUTI
+  PUSH @loop
+  JMP
+  HALT
 $END
 $PROGRAM
     "TEST_PUSH"

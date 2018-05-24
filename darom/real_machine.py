@@ -214,12 +214,8 @@ class RealMachine:
         new_vm.cpu.pc = cs
         new_vm.cpu.sp = ss
         new_vm.cpu.ds = ds
-        # self._current_vm.cpu.pc = cs
-        # self._current_vm.cpu.sp = ss
-        # self._current_vm.cpu.ds = ds
 
         self._vms.append((new_vm, ptr))
-        # self._vms.append((self._current_vm, ptr))
 
     def _dump_registers(self):
         print(
@@ -245,7 +241,7 @@ class RealMachine:
     def _release_interrupt(self, vm_id):
         self._kernel.release_res(
             resource.INTERRUPT,
-            [{'si':self._cpu.si, 'pi':self._cpu.pi, 'ti':self._cpu.ti, 'vm_id': vm_id}]
+            [{'si': self._cpu.si, 'pi': self._cpu.pi, 'ti': self._cpu.ti, 'vm_id': vm_id}]
         )
 
     def test(self, vm_id):
@@ -271,14 +267,11 @@ class RealMachine:
         ]
 
         if (self._cpu.pi) > 0:
-            # pi_handlers[self._cpu.pi](self)
             self._release_interrupt(vm_id)
             self._cpu.pi = 0
             interrupt_handlers.timeout(self)
             return
         if (self._cpu.si) > 0:
-            # self._dump_registers()
-            # si_handlers[self._cpu.si](self)
             self._release_interrupt(vm_id)
             self._cpu.si = 0
             interrupt_handlers.timeout(self)
@@ -287,12 +280,17 @@ class RealMachine:
             self._release_interrupt(vm_id)
             interrupt_handlers.timeout(self)
 
-    def step(self, vm_id, verbose=1):
+    def run(self, vm_id):
+        self._current_vm, self.cpu.ptr = self._vms[vm_id]
+
+        while self._current_vm.running:
+            self.step(vm_id)
+
+    def step(self, vm_id, verbose=False):
         self._current_vm, self.cpu.ptr = self._vms[vm_id]
 
         if not self._current_vm.running:
             return
-
 
         try:
             instruction = self.memory.read_byte(
@@ -323,7 +321,7 @@ class RealMachine:
         except exceptions.PageFaultError:
             self._cpu.pi = 3
 
-        if verbose > 1:
+        if verbose:
             print('User memory: ')
             print(self._user_memory.dump())
             print('Shared memory: ')

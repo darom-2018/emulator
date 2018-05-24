@@ -1,3 +1,20 @@
+# © 2018 Justinas Valatkevičius
+
+# This file is part of Darom.
+
+# Darom is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Darom is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Darom.  If not, see <http://www.gnu.org/licenses/>.
+
 import random
 
 OS_END = "OSEnd"
@@ -13,11 +30,6 @@ FROM_CHANNEL_DEVICE = "FromChannelDevice"
 
 
 class Resource:
-    '''
-    parent - resursa sukures procesas
-    elements - resurso elementu sarasas
-    wait_list - resurso laukianciu procesu sarasas
-    '''
     def __init__(self, parent, name):
         self._parent = parent
         self._name = name
@@ -25,16 +37,16 @@ class Resource:
         self._elements = []
         self._wait_list = []
 
-    # def __str__(self):
-    #     str = "---------------RESOURCE {} --------------\n".format(self._name)
-    #     str += "waiting proceses: \n"
-    #     for req in self._wait_list:
-    #         str += "{:>20}\n".format(req.proc.name)
-    #     str += "available elements:\n"
-    #     for elem in self._elements:
-    #         str += "\t{}\n".format(elem)
-    #     str += "----------------------------------------\n"
-    #     return str
+    def __str__(self):
+        str = "---------------RESOURCE {} --------------\n".format(self._name)
+        str += "waiting proceses: \n"
+        for req in self._wait_list:
+            str += "{:>20}\n".format(req.proc.name)
+        str += "available elements:\n"
+        for elem in self._elements:
+            str += "\t{}\n".format(elem)
+        str += "----------------------------------------\n"
+        return str
 
     @property
     def parent(self):
@@ -75,13 +87,8 @@ class Resource:
             self._elements.remove(e)
         return elems
 
-# Klase, resurso prasymui aprasyti
+
 class ResourceRequest:
-    '''
-    proc - resurso prasantis procesas
-    amount - prasomu resurso elementu skaicius
-    cond - funckija, leidzianti atlikti papildomus resurso identifikavimo veiksmus
-    '''
     def __init__(self, proc, amount, cond):
         self._proc = proc
         self._amount = amount

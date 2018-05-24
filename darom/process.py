@@ -1,3 +1,20 @@
+# © 2018 Justinas Valatkevičius
+
+# This file is part of Darom.
+
+# Darom is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Darom is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Darom.  If not, see <http://www.gnu.org/licenses/>.
+
 from darom import resource
 from darom import interrupt_handlers
 
@@ -7,6 +24,7 @@ from enum import Enum
 
 import pdb
 
+
 class Status(Enum):
     RUN = 1
     READY = 2
@@ -14,15 +32,15 @@ class Status(Enum):
     BLOCK = 4
     BLOCKS = 5
 
+
 class Process:
-    '''
-    process_list - procesų sąrašas, kuriam priklauso procesas
-    created_res - proceso sukurtu resursu sarasas
-    owned_res - procesui kurimo metu paduoti resursai
-    name - proceso isorinis vardas
-    '''
-    def __init__(self, priority, name=None, parent=None, owned_res=None, kernel=None):
-        # self._process_list = kernel.ready_procs
+    def __init__(
+            self,
+            priority,
+            name=None,
+            parent=None,
+            owned_res=None,
+            kernel=None):
         self._id = id(self)
         self._created_res = []
         self._status = Status.READY
@@ -34,11 +52,11 @@ class Process:
         self._kernel = kernel
 
         self._instructions = []
-        # instruction counter
         self._ic = 0
 
     def __str__(self):
-        str = "name: {:<20} {:<20} priority: {}".format(self._name, self._status, self._priority)
+        str = "name: {:<20} {:<20} priority: {}".format(
+            self._name, self._status, self._priority)
         return str
 
     def _change_ic(self, ic):
@@ -94,19 +112,16 @@ class Process:
             instr = self._instructions[self._ic]
             self._ic += 1
             if instr[1]:
-                # print("{:<15} : {}({})".format(self.__class__.__name__, instr[0].__name__, *instr[1]))
                 instr[0](*instr[1])
             else:
-                # print("{:<15} : {}()".format(self.__class__.__name__, instr[0].__name__))
                 instr[0]()
-
-        # self._kernel.planner()
 
     def unblock(self):
         if self._status == Status.BLOCKS:
             self._status = Status.READYS
         else:
             self._status = Status.READY
+
 
 class StartStop(Process):
     def __init__(self, kernel):
@@ -115,22 +130,52 @@ class StartStop(Process):
         self._kernel.ready_procs.append(self)
 
         self._instructions.append((self._kernel.create_res, [resource.OS_END]))
-        self._instructions.append((self._kernel.create_res, [resource.FROM_UI]))
-        self._instructions.append((self._kernel.create_res, [resource.USER_INPUT]))
-        self._instructions.append((self._kernel.create_res, [resource.USER_MEMORY]))
-        self._instructions.append((self._kernel.create_res, [resource.TASK_IN_USER_MEMORY]))
-        self._instructions.append((self._kernel.create_res, [resource.INTERRUPT]))
-        self._instructions.append((self._kernel.create_res, [resource.FROM_INTERRUPT]))
-        self._instructions.append((self._kernel.create_res, [resource.CHANNEL_DEVICE]))
-        self._instructions.append((self._kernel.create_res, [resource.DATA_TRANSFER]))
-        self._instructions.append((self._kernel.create_res, [resource.FROM_CHANNEL_DEVICE]))
+        self._instructions.append(
+            (self._kernel.create_res, [resource.FROM_UI]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.USER_INPUT]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.USER_MEMORY]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.TASK_IN_USER_MEMORY]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.INTERRUPT]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.FROM_INTERRUPT]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.CHANNEL_DEVICE]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.DATA_TRANSFER]))
+        self._instructions.append(
+            (self._kernel.create_res, [
+                resource.FROM_CHANNEL_DEVICE]))
 
-        self._instructions.append((self._kernel.create_process, [Main(kernel=self._kernel, priority=80)]             ))
-        self._instructions.append((self._kernel.create_process, [Loader(kernel=self._kernel, priority=80)]           ))
-        self._instructions.append((self._kernel.create_process, [Interrupt(kernel=self._kernel, priority=70)]        ))
-        self._instructions.append((self._kernel.create_process, [ChannelDevice(kernel=self._kernel, priority=80)]    ))
-        # self._instructions.append((self._kernel.create_process, [Idle(kernel=self._kernel, priority=80)]             ))
-        self._instructions.append((self._kernel.request_res, [resource.OS_END, 1]               ))
+        self._instructions.append(
+            (self._kernel.create_process, [
+                Main(
+                    kernel=self._kernel, priority=80)]))
+        self._instructions.append(
+            (self._kernel.create_process, [
+                Loader(
+                    kernel=self._kernel, priority=80)]))
+        self._instructions.append(
+            (self._kernel.create_process, [
+                Interrupt(
+                    kernel=self._kernel, priority=70)]))
+        self._instructions.append(
+            (self._kernel.create_process, [
+                ChannelDevice(
+                    kernel=self._kernel, priority=80)]))
+        self._instructions.append(
+            (self._kernel.request_res, [
+                resource.OS_END, 1]))
         self._instructions.append((self._kernel.destroy_process, [self]))
         self._instructions.append((self.shutdown, [1]))
 
@@ -138,6 +183,7 @@ class StartStop(Process):
         print("Shutting down OS")
         sys.exit(1)
         raise Exception("System shutdown")
+
 
 class Main(Process):
     def __init__(self, kernel, priority):
@@ -168,20 +214,25 @@ class Loader(Process):
     def __init__(self, kernel, priority):
         super().__init__(kernel=kernel, priority=priority, name="Loader")
 
-        self._instructions.append((self._kernel.request_res, [resource.FROM_UI, 1]))
+        self._instructions.append(
+            (self._kernel.request_res, [
+                resource.FROM_UI, 1]))
 
 
 class Interrupt(Process):
     def __init__(self, kernel, priority):
         super().__init__(kernel=kernel, priority=priority, name="Interrupt")
 
-        self._instructions.append((self._kernel.request_res, [resource.INTERRUPT, 1] ))
+        self._instructions.append(
+            (self._kernel.request_res, [
+                resource.INTERRUPT, 1]))
         self._instructions.append((self._identify_interrupt, []))
         self._instructions.append((self._change_ic, [0]))
 
     def _identify_interrupt(self):
         interrupt = self._owned_res[-1].data
-        si, pi, ti = interrupt.get('si'), interrupt.get('pi'), interrupt.get('ti')
+        si, pi, ti = interrupt.get('si'), interrupt.get(
+            'pi'), interrupt.get('ti')
         vm_id = interrupt.get('vm_id')
         if si > 0:
             if si == 1:
@@ -192,7 +243,6 @@ class Interrupt(Process):
             pass
         elif ti <= 0:
             self._release_interrupt_resource(vm_id, 'timeout')
-
 
     def _release_interrupt_resource(self, vm_id, type, si=None):
         self._kernel.release_res(
@@ -205,10 +255,16 @@ class ChannelDevice(Process):
     def __init__(self, kernel, priority):
         super().__init__(kernel=kernel, priority=priority, name="ChannelDevice")
 
-        self._instructions.append((self._kernel.release_res, [resource.CHANNEL_DEVICE, []]))
-        self._instructions.append((self._kernel.request_res, [resource.DATA_TRANSFER, 1] ))
+        self._instructions.append(
+            (self._kernel.release_res, [
+                resource.CHANNEL_DEVICE, []]))
+        self._instructions.append(
+            (self._kernel.request_res, [
+                resource.DATA_TRANSFER, 1]))
         self._instructions.append((self._transfer_data, []))
-        self._instructions.append((self._kernel.release_res, [resource.FROM_CHANNEL_DEVICE, [1]]))
+        self._instructions.append(
+            (self._kernel.release_res, [
+                resource.FROM_CHANNEL_DEVICE, [1]]))
         self._instructions.append((self._change_ic, [1]))
 
     def _transfer_data(self):
@@ -221,7 +277,11 @@ class ChannelDevice(Process):
 
 class JobGovernor(Process):
     def __init__(self, kernel, priority, vm):
-        super().__init__(kernel=kernel, priority=priority, name="JobGovernor {}".format(vm.get('vm_id')))
+        super().__init__(
+            kernel=kernel,
+            priority=priority,
+            name="JobGovernor {}".format(
+                vm.get('vm_id')))
         self._vm_id = vm.get('vm_id')
 
         self._pi_handlers = [
@@ -252,11 +312,9 @@ class JobGovernor(Process):
             )
         )
         self._instructions.append(
-            (
-                self._kernel.request_res,
-                [resource.FROM_INTERRUPT, 1, self._check_vm_id(vm.get('vm_id'))]
-            )
-        )
+            (self._kernel.request_res, [
+                resource.FROM_INTERRUPT, 1, self._check_vm_id(
+                    vm.get('vm_id'))]))
         self._instructions.append((self._inspect_from_interrupt, []))
         self._instructions.append((self._handle_input, []))
         self._instructions.append((self._change_ic, [1]))
@@ -270,7 +328,7 @@ class JobGovernor(Process):
         self._si = from_interrupt.data.get('si')
         self._vm_process = self._children[-1]
         if interrupt_type == 'timeout':
-            self._kernel._rm._cpu.ti=100
+            self._kernel._rm._cpu.ti = 100
             self._kernel._rm.current_vm._cpu._halted = False
             self._vm_process._change_ic(0)
             self._vm_process._set_status(Status.READY)
@@ -304,7 +362,10 @@ class JobGovernor(Process):
 class VirtualMachine(Process):
     def __init__(self, kernel, priority, vm):
         vm_id = vm.get('vm_id')
-        super().__init__(kernel=kernel, priority=priority, name="VirtualMachine {}".format(vm_id))
+        super().__init__(
+            kernel=kernel,
+            priority=priority,
+            name="VirtualMachine {}".format(vm_id))
 
         self._instructions.append((self._kernel._rm.run, [vm_id]))
         self._instructions.append((self._update_vm_gui, [vm.get('gui')]))
@@ -321,7 +382,7 @@ class Idle(Process):
     def __init__(self, kernel, priority):
         super().__init__(kernel=kernel, priority=priority, name="Idle")
 
-        self._instructions.append((print , ["Idle"]))
+        self._instructions.append((print, ["Idle"]))
         self._instructions.append((time.sleep, [1]))
         self._instructions.append((self.change_ic, [0]))
         self._instructions.append((self._kernel.planner, []))
