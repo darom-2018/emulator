@@ -105,30 +105,13 @@ def main():
     StartStop(kernel)
 
     if args.cli:
-        if not args.storage_device:
-            print('No storage device specified, nothing to do')
-            return
-
-        real_machine.add_storage_device(
-            StorageDevice.from_file(
-                args.storage_device))
-
-        for i, program in enumerate(args.programs):
-            print('Loading', program)
-            real_machine.load(program)
-            
-        kernel.planner()
-        
-        for i, program in enumerate(args.programs):
-            print('Loading', program)
-            while real_machine.current_vm.running:
-                real_machine.step(program)
+        raise NotImplementedError('CLI not yet supported')
     else:
         window = tkinter.Tk()
         window.title('Emulator')
 
         real_machine_gui = rm_gui.MachineFrame(window, real_machine)
-        
+
         button_frame = tkinter.Frame(window)
         button_frame.pack(side='bottom')
 
@@ -142,8 +125,12 @@ def main():
         storage_device_button.grid(row=1, column=1)
 
         program_load_button = tkinter.Button(
-            button_frame, text='Load a program', command=lambda: select_program(
-                window, real_machine_gui, real_machine))
+            button_frame,
+            text='Load a program',
+            command=lambda: select_program(
+                window,
+                real_machine_gui,
+                real_machine))
         program_load_button.grid(row=1, column=2)
 
         dump_kernel_button = tkinter.Button(

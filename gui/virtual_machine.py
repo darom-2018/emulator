@@ -183,10 +183,8 @@ class MachineFrame:
     def run(self):
         self.rm._kernel.release_res(
             resource.TASK_IN_USER_MEMORY,
-            [{'vm_id': self.vm_id, 'gui':self}]
+            [{'vm_id': self.vm_id, 'gui': self}]
         )
-        # while self.vm.running:
-        #     self.step()
 
     def update(self):
         self.output()

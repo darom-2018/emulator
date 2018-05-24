@@ -27,11 +27,13 @@ def _get_current_vm_id(real_machine):
     curr_vm = real_machine._current_vm
     return vms.index(curr_vm)
 
+
 def _release_interrupt_resource(kernel, vm_id, type):
     kernel.release_res(
         resource.FROM_INTERRUPT,
         [{"vm_id": vm_id, "type": type}]
     )
+
 
 def invalid_instruction_code(real_machine):
     print('Invalid instruction code')
@@ -192,7 +194,7 @@ def led(real_machine):
     # real_machine.channel_device.write_led([red, green, blue])
     real_machine._kernel.release_res(
         resource.DATA_TRANSFER,
-        [{'dest': 'led', 'rgb':[red, green, blue]}]
+        [{'dest': 'led', 'rgb': [red, green, blue]}]
     )
 
 

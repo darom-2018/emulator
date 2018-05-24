@@ -41,9 +41,10 @@ class DUP(instruction.Instruction):
 
     def execute(self, virtual_machine):
         head = virtual_machine.real_machine.memory.read_word(
-            virtual_machine.cpu.sp-constants.WORD_SIZE, virtual=True
+            virtual_machine.cpu.sp - constants.WORD_SIZE, virtual=True
         )
-        virtual_machine.real_machine.memory.write_word(virtual_machine.cpu.sp, head, virtual=True)
+        virtual_machine.real_machine.memory.write_word(
+            virtual_machine.cpu.sp, head, virtual=True)
         virtual_machine.cpu.sp += constants.WORD_SIZE
 
 
@@ -60,8 +61,12 @@ class POPM(instruction.Instruction):
         super().__init__(b'\x12', 'POPM')
 
     def execute(self, virtual_machine):
-        word = int.from_bytes(virtual_machine.stack_pop(), byteorder=constants.BYTE_ORDER)
-        page = int.from_bytes(virtual_machine.stack_pop(), byteorder=constants.BYTE_ORDER)
+        word = int.from_bytes(
+            virtual_machine.stack_pop(),
+            byteorder=constants.BYTE_ORDER)
+        page = int.from_bytes(
+            virtual_machine.stack_pop(),
+            byteorder=constants.BYTE_ORDER)
         head = virtual_machine.stack_pop()
 
         byte_address = util.to_byte_address(page, word)
@@ -174,12 +179,15 @@ class NOT(instruction.Instruction):
         super().__init__(b'\x31', 'NOT')
 
     def execute(self, virtual_machine):
-        head = int.from_bytes(virtual_machine.stack_pop(), byteorder=constants.BYTE_ORDER)
+        head = int.from_bytes(
+            virtual_machine.stack_pop(),
+            byteorder=constants.BYTE_ORDER)
         result = (head ^ constants.WORD_MAX) & constants.WORD_MAX
 
         virtual_machine.stack_push(
-            result.to_bytes(constants.WORD_SIZE, byteorder=constants.BYTE_ORDER)
-        )
+            result.to_bytes(
+                constants.WORD_SIZE,
+                byteorder=constants.BYTE_ORDER))
 
 
 class OR(instruction.BinaryOperation):
@@ -195,7 +203,10 @@ class XOR(instruction.BinaryOperation):
 def _jmp(instruction, virtual_machine, offset):
     # The offset is calculated from the beginning of the instruction.
     # but PC will have been incremented after executing JMP.
-    offset = int.from_bytes(offset, byteorder=constants.BYTE_ORDER, signed=True)
+    offset = int.from_bytes(
+        offset,
+        byteorder=constants.BYTE_ORDER,
+        signed=True)
     virtual_machine.cpu.pc += offset - instruction.length
 
 
